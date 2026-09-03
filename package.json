@@ -1,0 +1,27 @@
+{
+  "name": "slop-blocker",
+  "version": "0.1.0",
+  "description": "Browser extension that detects AI-generated content and hides it behind a click-to-reveal warning.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "icons": "node scripts/gen-icons.mjs",
+    "fixtures": "node scripts/gen-fixtures.mjs",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.tools.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke": "npm run build && node scripts/smoke.mjs",
+    "check": "npm run typecheck && npm run test && npm run build",
+    "check:all": "npm run check && node scripts/smoke.mjs"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.287",
+    "@types/node": "^26.4.1",
+    "esbuild": "^0.28.2",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.7"
+  }
+}

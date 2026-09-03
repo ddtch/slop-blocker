@@ -1,0 +1,50 @@
+{
+  "_readme": [
+    "Disclosure text as rendered by each platform, per locale. Matching is",
+    "case-insensitive substring, and ONLY inside the disclosure containers named",
+    "in each site adapter's selectors.ts — never against page titles, captions or",
+    "article text, or a video *about* AI labelling would block itself.",
+    "",
+    "Extra variants only add coverage: a wrong string is a missed detection, not a",
+    "false positive. Locales absent here fall back to 'en' and the popup warns that",
+    "detection may be incomplete.",
+    "",
+    "VERIFY AGAINST LIVE PAGES before shipping: platform wording changes. The RU",
+    "strings in particular are plausible renderings collected from public docs and",
+    "need confirmation in a real RU-locale session (see TESTING.md).",
+    "",
+    "Only list wording that is specific to synthetic/altered content. Deliberately",
+    "absent: YouTube's section heading 'How this content was made' and the",
+    "'Captured with a camera' value, because both also appear for content that is",
+    "NOT AI-generated — matching them would block camera footage."
+  ],
+  "_meta": {
+    "lastVerified": null,
+    "note": "No entry has been confirmed against a live page yet."
+  },
+  "youtube": {
+    "en": [
+      "Altered or synthetic content",
+      "Sound or visuals were significantly edited or digitally generated",
+      "synthetic content"
+    ],
+    "ru": [
+      "Изменённый или синтетический контент",
+      "Измененный или синтетический контент",
+      "Звук или изображение существенно изменены или созданы цифровым способом",
+      "синтетический контент"
+    ]
+  },
+  "tiktok": {
+    "en": ["AI-generated", "AI generated", "Creator labeled as AI-generated", "AIGC"],
+    "ru": ["Создано ИИ", "Сгенерировано ИИ", "Контент, созданный ИИ"]
+  },
+  "instagram": {
+    "en": ["AI info", "Made with AI", "AI-generated", "AI content"],
+    "ru": ["Информация об ИИ", "Создано с помощью ИИ", "Сгенерировано ИИ"]
+  },
+  "facebook": {
+    "en": ["AI info", "Made with AI", "AI-generated"],
+    "ru": ["Информация об ИИ", "Создано с помощью ИИ"]
+  }
+}

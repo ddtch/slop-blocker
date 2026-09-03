@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Slop Blocker — provenance fixture</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 32px;
+        background: #18181b;
+        color: #f4f4f5;
+        font: 15px/1.5 system-ui, sans-serif;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 6px;
+      }
+      p.lead {
+        color: #a1a1aa;
+        max-width: 68ch;
+        margin: 0 0 28px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 20px;
+        max-width: 1000px;
+      }
+      figure {
+        margin: 0;
+        padding: 12px;
+        border: 1px solid #27272a;
+        border-radius: 12px;
+        background: #101014;
+      }
+      figure img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+      }
+      figcaption {
+        margin-top: 10px;
+        font-size: 12.5px;
+        color: #a1a1aa;
+      }
+      figcaption b {
+        display: block;
+        color: #f4f4f5;
+        font-size: 13px;
+        margin-bottom: 2px;
+      }
+      code {
+        font-size: 12px;
+        color: #fda4af;
+      }
+      section {
+        margin-top: 40px;
+        max-width: 68ch;
+      }
+      .expect {
+        color: #34d399;
+      }
+      .expect-none {
+        color: #71717a;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Provenance fixture</h1>
+    <p class="lead">
+      Five locally generated images with hand-written metadata. Serve this directory over HTTP and
+      open the page with the extension loaded — see <code>TESTING.md</code>. Each caption states what
+      should happen; anything else is a bug.
+    </p>
+
+    <div class="grid">
+      <figure>
+        <img src="media/ai-xmp.png" width="128" height="128" alt="Red checkerboard" />
+        <figcaption>
+          <b>ai-xmp.png</b>
+          XMP <code>Iptc4xmpExt:DigitalSourceType = trainedAlgorithmicMedia</code>, creator tool
+          Adobe Firefly.<br /><span class="expect">Expect: blocked, "confirmed".</span>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="media/ai-c2pa.png" width="128" height="128" alt="Magenta checkerboard" />
+        <figcaption>
+          <b>ai-c2pa.png</b>
+          C2PA manifest in a <code>caBX</code> chunk with a created action citing
+          trainedAlgorithmicMedia.<br /><span class="expect">Expect: blocked, "confirmed".</span>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="media/generator-c2pa.png" width="128" height="128" alt="Amber checkerboard" />
+        <figcaption>
+          <b>generator-c2pa.png</b>
+          C2PA manifest naming Adobe Firefly but declaring no AI action.<br /><span class="expect"
+            >Expect: blocked, "likely".</span
+          >
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="media/provenance-clean.png" width="128" height="128" alt="Green checkerboard" />
+        <figcaption>
+          <b>provenance-clean.png</b>
+          Provenance present, source type is <code>digitalCapture</code>.<br /><span
+            class="expect-none"
+            >Expect: untouched.</span
+          >
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="media/no-metadata.png" width="128" height="128" alt="Grey checkerboard" />
+        <figcaption>
+          <b>no-metadata.png</b>
+          No metadata whatsoever.<br /><span class="expect-none">Expect: untouched.</span>
+        </figcaption>
+      </figure>
+    </div>
+
+    <section>
+      <h2>Keyword scoring</h2>
+      <p>
+        The images below carry no metadata; only their alt text differs. This checks the tiering in
+        <code>lists/keywords.json</code>.
+      </p>
+      <div class="grid">
+        <figure>
+          <img
+            src="media/no-metadata.png"
+            width="128"
+            height="128"
+            alt="landscape at dusk #aiart #wallpaper"
+          />
+          <figcaption>
+            <b>Hashtag disclosure</b>
+            <span class="expect">Expect: blocked, "likely".</span>
+          </figcaption>
+        </figure>
+
+        <figure>
+          <img
+            src="media/no-metadata.png"
+            width="128"
+            height="128"
+            alt="Видео сгенерировано нейросетью"
+          />
+          <figcaption>
+            <b>Russian disclosure phrase</b>
+            <span class="expect">Expect: blocked, "likely".</span>
+          </figcaption>
+        </figure>
+
+        <figure>
+          <img
+            src="media/no-metadata.png"
+            width="128"
+            height="128"
+            alt="Why AI-generated slop is ruining the web"
+          />
+          <figcaption>
+            <b>Talking about AI, not disclosing</b>
+            <span class="expect-none"
+              >Expect: NOT blocked — a small "possibly AI" chip only.</span
+            >
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section>
+      <h2>False-positive guard</h2>
+      <p>
+        This paragraph deliberately contains the exact strings a platform uses for its disclosure —
+        "Altered or synthetic content" and «Изменённый или синтетический контент» — as ordinary
+        article text. Nothing on this page may be blocked because of it: disclosure strings are only
+        ever matched inside the disclosure containers a site adapter names.
+      </p>
+    </section>
+  </body>
+</html>

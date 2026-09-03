@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="dark" />
+    <title>Slop Blocker</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-head">
+        <img src="icons/icon-48.png" alt="" width="28" height="28" />
+        <h1 data-i18n="optionsTitle"></h1>
+      </header>
+
+      <section class="card">
+        <h2 data-i18n="optionsGeneral"></h2>
+
+        <label class="field field--row">
+          <input type="checkbox" id="enabled" />
+          <span data-i18n="optionsEnabled"></span>
+        </label>
+
+        <label class="field field--row">
+          <input type="checkbox" id="autoPause" />
+          <span data-i18n="optionsAutoPause"></span>
+        </label>
+
+        <label class="field">
+          <span class="field-label" data-i18n="optionsThreshold"></span>
+          <select id="threshold">
+            <option value="confirmed" data-i18n="optionsThresholdConfirmed"></option>
+            <option value="likely" data-i18n="optionsThresholdLikely"></option>
+            <option value="suspected" data-i18n="optionsThresholdSuspected"></option>
+          </select>
+        </label>
+
+        <label class="field field--row">
+          <input type="checkbox" id="wholePageMode" />
+          <span data-i18n="optionsWholePage"></span>
+        </label>
+
+        <label class="field">
+          <span class="field-label" data-i18n="optionsWholePageThreshold"></span>
+          <input type="number" id="wholePageThreshold" min="1" max="100" step="1" />
+        </label>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="optionsTrackers"></h2>
+        <label class="field">
+          <select id="trackerMode">
+            <option value="off" data-i18n="optionsTrackerOff"></option>
+            <option value="count" data-i18n="optionsTrackerCount"></option>
+            <option value="block" data-i18n="optionsTrackerBlock"></option>
+          </select>
+        </label>
+        <p class="hint" id="trackerBlockNote" data-i18n="popupTrackersBlockNote" hidden></p>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="optionsLists"></h2>
+
+        <div class="list-editor" data-list="blockCreators">
+          <h3 data-i18n="optionsBlockedCreators"></h3>
+          <ul class="entries"></ul>
+          <div class="adder">
+            <input type="text" data-i18n-placeholder="optionsAddPlaceholder" />
+            <button type="button" data-i18n="optionsAdd"></button>
+          </div>
+        </div>
+
+        <div class="list-editor" data-list="trustCreators">
+          <h3 data-i18n="optionsTrustedCreators"></h3>
+          <ul class="entries"></ul>
+          <div class="adder">
+            <input type="text" data-i18n-placeholder="optionsAddPlaceholder" />
+            <button type="button" data-i18n="optionsAdd"></button>
+          </div>
+        </div>
+
+        <div class="list-editor" data-list="blockDomains">
+          <h3 data-i18n="optionsBlockedDomains"></h3>
+          <ul class="entries"></ul>
+          <div class="adder">
+            <input type="text" data-i18n-placeholder="optionsDomainPlaceholder" />
+            <button type="button" data-i18n="optionsAdd"></button>
+          </div>
+        </div>
+
+        <div class="list-editor" data-list="disabledSites">
+          <h3 data-i18n="optionsDisabledSites"></h3>
+          <ul class="entries"></ul>
+          <div class="adder">
+            <input type="text" data-i18n-placeholder="optionsDomainPlaceholder" />
+            <button type="button" data-i18n="optionsAdd"></button>
+          </div>
+        </div>
+
+        <div class="row-actions">
+          <button class="btn" id="exportLists" type="button" data-i18n="optionsExport"></button>
+          <button class="btn" id="importLists" type="button" data-i18n="optionsImport"></button>
+          <input type="file" id="importFile" accept="application/json" hidden />
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="optionsStats"></h2>
+        <dl class="stats">
+          <div><dt data-i18n="popupLifetime"></dt><dd id="statBlocked">0</dd></div>
+          <div><dt data-i18n="popupSession"></dt><dd id="statSession">0</dd></div>
+          <div><dt data-i18n="optionsTrackers"></dt><dd id="statTrackers">0</dd></div>
+        </dl>
+        <button class="btn btn--danger" id="resetStats" type="button" data-i18n="optionsResetStats"></button>
+      </section>
+
+      <p class="toast" id="toast" hidden></p>
+    </main>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

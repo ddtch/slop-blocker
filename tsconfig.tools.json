@@ -1,0 +1,10 @@
+{
+  // Tests, build script and generators: these do run on Node.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["chrome", "node"],
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": ["test", "scripts", "build.mjs", "vitest.config.ts"]
+}

@@ -1,0 +1,21 @@
+{
+  "_readme": [
+    "Accounts and sites known to publish AI-generated content.",
+    "",
+    "This ships EMPTY on purpose. Labelling a real account as an 'AI slop channel'",
+    "is a factual claim about someone, and shipping unverified names would be",
+    "defamatory and would produce false positives users cannot audit. Users build",
+    "this list themselves via the shroud's 'block this author' action, the context",
+    "menu, or the options page; a curated community list can be added later behind",
+    "the opt-in list-updates setting (SPEC.md M2).",
+    "",
+    "Entry format: '@handle' (matched case-insensitively, without the '@') or a",
+    "platform-stable id such as a YouTube channel id 'UCxxxxxxxxxxxxxxxxxxxxxx'.",
+    "Example: \"youtubeChannels\": [\"@examplechannel\", \"UC0000000000000000000000\"]"
+  ],
+  "youtubeChannels": [],
+  "tiktokUsers": [],
+  "instagramUsers": [],
+  "xUsers": [],
+  "domains": []
+}
