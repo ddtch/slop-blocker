@@ -200,7 +200,7 @@ sent without credentials — is unverifiable in a minified bundle downloaded fro
 package is built reproducibly and its hash is published with each release:
 
 ```bash
-git checkout v0.1.0
+git checkout v<version>    # the tag the release was cut from
 npm ci && npm run pack     # prints the SHA-256 of slop-blocker-<version>.zip
 ```
 
