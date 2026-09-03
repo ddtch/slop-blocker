@@ -21,6 +21,12 @@ One screenshot of a real, labelled video page:
   single-video page shares no container with the feed) or no `BADGE` did.
 - The URL was `tiktok.com/@handle/video/<id>`, which the quick actions now read.
 
+Since then the adapter falls back to "the video filling the viewport, and the
+nearest ancestor that names an author" whenever no `ITEM` selector matches, so
+the badge is read even from containers we cannot name. That is a safety net, not
+a fix: it only finds one post, so a page where `ITEM` is wrong is covered far
+less well than one where it is right.
+
 **Still needed, and it is one console command on that page:**
 
 ```js

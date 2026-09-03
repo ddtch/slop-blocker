@@ -17,8 +17,23 @@ function subjectOf(adapter: SiteAdapter, href: string) {
   return adapter.subject?.(document, ctx) ?? null;
 }
 
+/** jsdom lays nothing out, so viewport geometry has to be stated. */
+function fillViewport(element: HTMLElement, share = 0.9): void {
+  const height = window.innerHeight * share;
+  const top = (window.innerHeight - height) / 2;
+  element.getBoundingClientRect = () =>
+    ({ width: 400, height, top, bottom: top + height, left: 0, right: 400 }) as DOMRect;
+}
+
+/** A short item near the top: visible, but not what the page is about. */
+function smallItem(element: HTMLElement, top: number): void {
+  element.getBoundingClientRect = () =>
+    ({ width: 400, height: 120, top, bottom: top + 120, left: 0, right: 400 }) as DOMRect;
+}
+
 beforeEach(() => {
   document.body.innerHTML = '';
+  Object.defineProperty(window, 'innerHeight', { value: 800, configurable: true });
 });
 
 describe('YouTube', () => {
@@ -123,8 +138,63 @@ describe('TikTok', () => {
     expect(subject?.item?.id).toBe('slopmaker/video/7412345');
   });
 
-  it('returns nothing on the feed', () => {
+  /*
+   * Reported from a live page. TikTok's For You feed is served from
+   * tiktok.com with no path at all, but it is not a feed in the sense that
+   * matters here: one video fills the screen with its author printed on it, so
+   * there is exactly one thing to act on. Reading only the URL meant the popup
+   * offered nothing on the page where people spend all their time.
+   */
+  it('names the video filling the screen on the pathless For You feed', () => {
+    document.body.innerHTML = `
+      <div class="whatever-tiktok-calls-it-today">
+        <video></video>
+        <a href="/@glitterclitter">glitterclitter</a>
+        <a href="/@glitterclitter/video/7412345">link</a>
+      </div>
+    `;
+    fillViewport(document.querySelector('video') as HTMLElement);
+
+    const subject = subjectOf(tiktokAdapter, 'https://www.tiktok.com/');
+    expect(subject?.creator?.handle).toBe('glitterclitter');
+    expect(subject?.item?.id).toBe('glitterclitter/video/7412345');
+  });
+
+  it('names the author even when the post carries no permalink', () => {
+    document.body.innerHTML = '<div><video></video><a href="/@someone">someone</a></div>';
+    fillViewport(document.querySelector('video') as HTMLElement);
+
+    const subject = subjectOf(tiktokAdapter, 'https://www.tiktok.com/');
+    expect(subject?.creator?.handle).toBe('someone');
+    expect(subject?.item).toBeUndefined();
+  });
+
+  // The guard on the above: in a scrolling list of many posts, picking one of
+  // them would be a guess about which the user meant.
+  it('names nobody when no single post dominates the viewport', () => {
+    document.body.innerHTML = `
+      <div><video></video><a href="/@one">one</a></div>
+      <div><video></video><a href="/@two">two</a></div>
+    `;
+    const videos = [...document.querySelectorAll('video')] as HTMLElement[];
+    smallItem(videos[0]!, 100);
+    smallItem(videos[1]!, 300);
+
+    expect(subjectOf(tiktokAdapter, 'https://www.tiktok.com/')).toBeNull();
+  });
+
+  it('names nobody on an empty feed', () => {
     expect(subjectOf(tiktokAdapter, 'https://www.tiktok.com/foryou')).toBeNull();
+  });
+
+  it('still prefers the URL when it names the author', () => {
+    // A video page that also happens to show some other account's link first.
+    document.body.innerHTML = '<div><video></video><a href="/@notthisone">x</a></div>';
+    fillViewport(document.querySelector('video') as HTMLElement);
+
+    const subject = subjectOf(tiktokAdapter, 'https://www.tiktok.com/@realauthor/video/99');
+    expect(subject?.creator?.handle).toBe('realauthor');
+    expect(subject?.item?.id).toBe('realauthor/video/99');
   });
 });
 

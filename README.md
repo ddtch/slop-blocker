@@ -76,7 +76,9 @@ saying "channel", so it says exactly what it will store. The same works on YouTu
 TikTok, Instagram and X profiles and posts.
 
 This runs off the URL and the page chrome, not off detection, so it works on a channel we have no
-signal about — which is the point. It also works on a site you switched the extension off on, since
+signal about — which is the point. Where the URL says nothing, as on TikTok's For You feed, the
+subject is whichever post fills the screen; in a scrolling list where no single post dominates, the
+buttons stay away rather than guess which one you meant. It also works on a site you switched the extension off on, since
 that is exactly when you are most likely to want it. Both buttons are toggles: press again to undo,
 or edit the lists in the options page.
 
@@ -153,6 +155,11 @@ Rules that keep this honest:
 - **Fragile selectors live in one file per adapter** (`adapters/<site>/selectors.ts`) with a
   `LAST_VERIFIED` date and a `NOTES.md` explaining what to re-check. Platform markup churns; this
   makes a breakage a one-file fix.
+- **A renamed container must not silently uncover a site.** When none of a badge adapter's item
+  selectors match, it falls back to whatever media fills the viewport and the nearest ancestor that
+  names an author — a structural description of the page rather than a class name, so it survives a
+  redesign. A silent zero is the worst failure this extension has: no error, no empty state, just
+  "nothing detected here" on a page full of labelled AI content.
 
 ### Performance budget
 

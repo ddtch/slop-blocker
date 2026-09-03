@@ -18,6 +18,7 @@ What the suite covers:
 | `test/unit/trackers.test.ts` | Hostname suffix matching, bare-TLD guard, shape of the shipped list |
 | `test/unit/disclosure.test.ts` | Locale fallback, and that disclosure strings outside a disclosure container are ignored |
 | `test/integration/youtube.test.ts` | Disclosed video → covered, paused, reported; one auto-resume undone; reveal is permanent; trusted authors exempt; the off switches |
+| `test/unit/badge-adapter.test.ts` | The fallback for renamed containers, and that it neither doubles up nor reads captions as labels |
 | `test/unit/observer.test.ts` | When a rescan happens, and that a `pushState` navigation is noticed at all |
 | `test/unit/locales.test.ts` | Every locale covers every key and keeps every placeholder |
 | `test/unit/items.test.ts` | Per-item refs: exact (case-sensitive) id matching, round-tripping the options-page format |
