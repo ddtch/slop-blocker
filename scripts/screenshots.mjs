@@ -1,28 +1,19 @@
-// Loads the built extension into a real (headless) Chrome and checks that it
-// actually blocks things on the local fixture page.
+// Captures the store screenshots from the real extension in a real browser.
 //
-// Two things this had to work around:
+// Everything here is the actual UI: the shroud over the fixture page, the popup
+// and the options page, rendered by the built `dist/`. Nothing is mocked up.
+// The only cosmetic liberty is centring the popup on a backdrop, because the
+// Chrome Web Store demands exactly 1280x800 and the popup is 360px wide.
 //
-//   * `--dump-dom` snapshots the page before detection can finish — scans are
-//     debounced and provenance reads are async — so it always saw zero
-//     overlays. We drive Chrome over the DevTools Protocol and wait instead.
-//   * `--load-extension` no longer loads anything on stable Chrome (disabled in
-//     M137; this silently produced a browser with no extension in it). The
-//     supported path is `--enable-unsafe-extension-debugging` plus the CDP
-//     `Extensions.loadUnpacked` command.
-//   * ...but `Extensions.loadUnpacked` does not exist on Chrome older than that,
-//     where `--load-extension` is still the only way in. So we pass both, try
-//     the CDP command first, and fall back to the flag when the method is
-//     missing. Whichever path ran, the id is checked the same way afterwards.
+// Shares the Chrome-launching approach with scripts/smoke.mjs; see the comment
+// there for why extensions are loaded the way they are.
 //
-// Uses only Node built-ins (Node 22+ ships a WebSocket client).
-//
-// Usage: node scripts/smoke.mjs [--keep-open]
+// Usage: node scripts/screenshots.mjs [--keep-open]
 
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
-import { access, mkdtemp, readFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path, { extname, join } from 'node:path';
@@ -30,6 +21,11 @@ import path, { extname, join } from 'node:path';
 const ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), '..');
 const FIXTURE_DIR = join(ROOT, 'test', 'fixtures');
 const DIST = join(ROOT, 'dist');
+const OUT_DIR = join(ROOT, 'docs', 'screenshots');
+
+/** The Chrome Web Store accepts 1280x800 or 640x400, and nothing else. */
+const WIDTH = 1280;
+const HEIGHT = 800;
 const SETTLE_MS = 7000;
 
 const CHROME_CANDIDATES = [
@@ -46,18 +42,21 @@ const MIME = {
   '.js': 'text/javascript',
 };
 
-/**
- * What the fixture page is built to produce. Five items must be covered — the
- * two AI-declared images, the generator-only image, and the two keyword
- * disclosures — and the deliberately ambiguous one must get a chip instead.
- */
-const EXPECTED = { block: 5, chip: 1 };
+/** Centres a narrow extension page on a backdrop so it fills a 1280x800 frame. */
+const CENTRE_ON_BACKDROP = `(() => {
+  document.documentElement.style.cssText =
+    'height:100%;display:flex;align-items:center;justify-content:center;' +
+    // Without this, the body's own overflow propagates to the viewport (CSS
+    // overflow propagation), the body stops being a scroll container, and the
+    // sticky footer falls out of the card.
+    'overflow:hidden;' +
+    'background:radial-gradient(circle at 50% 0%, #23232b 0%, #0b0b0f 70%);';
+  document.body.style.margin = '0';
+  document.body.style.borderRadius = '14px';
+  document.body.style.boxShadow = '0 24px 70px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.07)';
+  return true;
+})()`;
 
-/**
- * The id Chrome gives an unpacked extension: the first 16 bytes of the SHA-256
- * of its absolute directory path, hex-encoded, with each digit mapped 0-f -> a-p.
- * Needed for the `--load-extension` path, which reports no id back to us.
- */
 function unpackedExtensionId(directory) {
   const hex = createHash('sha256').update(directory).digest('hex').slice(0, 32);
   let id = '';
@@ -77,14 +76,12 @@ async function findChrome() {
   throw new Error(`no Chrome binary found; looked in:\n  ${CHROME_CANDIDATES.join('\n  ')}`);
 }
 
-/** Serves test/fixtures, so the extension sees a normal http origin. */
 function startServer() {
   const server = createServer(async (request, response) => {
     const relative =
       decodeURIComponent(new URL(request.url, 'http://localhost').pathname).replace(/^\/+/, '') ||
-      'provenance.html';
+      'demo.html';
     const file = join(FIXTURE_DIR, relative);
-    // Path traversal guard: everything must resolve inside the fixture directory.
     if (!file.startsWith(FIXTURE_DIR)) {
       response.writeHead(403).end();
       return;
@@ -97,7 +94,6 @@ function startServer() {
       response.writeHead(404).end('not found');
     }
   });
-
   return new Promise((resolve) => {
     server.listen(0, '127.0.0.1', () => resolve({ server, port: server.address().port }));
   });
@@ -109,14 +105,13 @@ async function getJson(url, attempts = 60) {
       const response = await fetch(url);
       if (response.ok) return await response.json();
     } catch {
-      // Chrome's debugging endpoint is not up yet.
+      // Not up yet.
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   throw new Error(`DevTools endpoint never became ready: ${url}`);
 }
 
-/** Minimal CDP client over the native WebSocket. */
 class Cdp {
   #socket;
   #nextId = 0;
@@ -168,33 +163,41 @@ class Cdp {
   }
 }
 
-/**
- * Runs inside the page. Overlay hosts live in the page's DOM (their contents
- * are in a closed shadow root), so counting them from the main world works even
- * though the content script itself runs in an isolated world.
- */
-const PROBE = `JSON.stringify((() => {
-  const hosts = [...document.querySelectorAll('[data-slop-blocker]')];
-  const byMode = {};
-  for (const host of hosts) {
-    const mode = host.getAttribute('data-slop-blocker');
-    byMode[mode] = (byMode[mode] ?? 0) + 1;
+/** Waits for a target matching `predicate` and connects to it. */
+async function attach(debugPort, predicate, attempts = 40) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const targets = await getJson(`http://127.0.0.1:${debugPort}/json/list`);
+    const target = targets.find(predicate);
+    if (target) return { cdp: await Cdp.connect(target.webSocketDebuggerUrl), target };
+    await new Promise((resolve) => setTimeout(resolve, 250));
   }
-  const blurred = [...document.querySelectorAll('img, video')]
-    .filter((element) => (element.style.filter || '').includes('blur'))
-    .map((element) => (element.currentSrc || element.src || '').split('/').pop());
-  return { byMode, blurred };
-})())`;
+  throw new Error('target never appeared');
+}
+
+async function capture(cdp, file, { prepare } = {}) {
+  await cdp.send('Runtime.enable');
+  await cdp.send('Emulation.setDeviceMetricsOverride', {
+    width: WIDTH,
+    height: HEIGHT,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  if (prepare) await cdp.evaluate(prepare);
+  // Let layout settle after the metrics override before the pixels are read.
+  await new Promise((resolve) => setTimeout(resolve, 600));
+  const { data } = await cdp.send('Page.captureScreenshot', { format: 'png' });
+  const out = join(OUT_DIR, file);
+  await writeFile(out, Buffer.from(data, 'base64'));
+  console.log(`[shots] ${path.relative(ROOT, out)}`);
+}
 
 async function main() {
   const keepOpen = process.argv.includes('--keep-open');
   const chrome = await findChrome();
   const { server, port } = await startServer();
-  const profile = await mkdtemp(join(tmpdir(), 'slop-smoke-'));
-  const pageUrl = `http://127.0.0.1:${port}/provenance.html`;
-
-  console.log(`[smoke] chrome:  ${chrome}`);
-  console.log(`[smoke] fixture: ${pageUrl}`);
+  const profile = await mkdtemp(join(tmpdir(), 'slop-shots-'));
+  const pageUrl = `http://127.0.0.1:${port}/demo.html`;
+  await mkdir(OUT_DIR, { recursive: true });
 
   const child = spawn(
     chrome,
@@ -203,9 +206,9 @@ async function main() {
       '--disable-gpu',
       '--no-first-run',
       '--no-default-browser-check',
-      // Required for Extensions.loadUnpacked below (Chrome M137+).
+      '--hide-scrollbars',
+      `--window-size=${WIDTH},${HEIGHT}`,
       '--enable-unsafe-extension-debugging',
-      // The only path that works before M137; silently ignored after it.
       `--load-extension=${DIST}`,
       `--disable-extensions-except=${DIST}`,
       '--remote-debugging-port=0',
@@ -215,12 +218,6 @@ async function main() {
     { stdio: ['ignore', 'pipe', 'pipe'] },
   );
 
-  let chromeStderr = '';
-  child.stderr.on('data', (chunk) => {
-    chromeStderr += chunk.toString();
-  });
-
-  // With port 0 Chrome picks a port and writes it into the profile directory.
   const portFile = join(profile, 'DevToolsActivePort');
   let debugPort = null;
   for (let attempt = 0; attempt < 60 && debugPort === null; attempt++) {
@@ -237,72 +234,74 @@ async function main() {
     const version = await getJson(`http://127.0.0.1:${debugPort}/json/version`);
     const browser = await Cdp.connect(version.webSocketDebuggerUrl);
 
-    let id;
+    let extensionId;
     try {
-      ({ id } = await browser.send('Extensions.loadUnpacked', { path: DIST }));
-      console.log(`[smoke] loaded extension ${id} (Extensions.loadUnpacked)`);
+      ({ id: extensionId } = await browser.send('Extensions.loadUnpacked', { path: DIST }));
     } catch (error) {
       if (!/not available|wasn't found/i.test(error.message)) throw error;
-      // Older Chrome: --load-extension already did it, and tells us nothing.
-      id = unpackedExtensionId(DIST);
-      console.log(`[smoke] loaded extension ${id} (--load-extension)`);
+      extensionId = unpackedExtensionId(DIST);
     }
+    console.log(`[shots] extension ${extensionId}`);
 
+    // 1. The fixture page, with the shrouds in place.
     await browser.send('Target.createTarget', { url: pageUrl });
-    // Detection is debounced and provenance reads are network-bound; wait it out.
     await new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
-
-    const targets = await getJson(`http://127.0.0.1:${debugPort}/json/list`);
-    const workerRunning = targets.some(
-      (target) => target.type === 'service_worker' && target.url.includes(id),
+    const page = await attach(
+      debugPort,
+      (target) => target.type === 'page' && target.url.includes('demo.html'),
     );
-    const page = targets.find(
-      (target) => target.type === 'page' && target.url.includes('provenance'),
+    await capture(page.cdp, '01-blocked-page.png');
+
+    // The popup renders one tab's detections, so it needs that tab's id — which
+    // only the extension can see. Ask its service worker.
+    const worker = await attach(
+      debugPort,
+      (target) => target.type === 'service_worker' && target.url.includes(extensionId),
     );
-    if (!page) throw new Error('fixture page target not found');
+    await worker.cdp.send('Runtime.enable');
+    const tabId = await worker.cdp.evaluate(
+      `chrome.tabs.query({ url: '${pageUrl}' }).then((tabs) => tabs[0]?.id ?? 0)`,
+    );
+    if (!tabId) throw new Error('could not resolve the fixture tab id');
 
-    const cdp = await Cdp.connect(page.webSocketDebuggerUrl);
-    await cdp.send('Runtime.enable');
-    const result = JSON.parse(await cdp.evaluate(PROBE));
+    // 2. The popup, showing what was found on that tab.
+    await browser.send('Target.createTarget', {
+      url: `chrome-extension://${extensionId}/popup.html?tabId=${tabId}`,
+    });
+    const popup = await attach(
+      debugPort,
+      (target) => target.type === 'page' && target.url.includes('popup.html'),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await capture(popup.cdp, '02-popup.png', { prepare: CENTRE_ON_BACKDROP });
 
-    console.log(`[smoke] service worker running: ${workerRunning}`);
-    console.log(`[smoke] overlays: ${JSON.stringify(result.byMode)}`);
-    console.log(`[smoke] blurred:  ${result.blurred.join(', ') || '(none)'}`);
+    // 3. The options page.
+    await browser.send('Target.createTarget', {
+      url: `chrome-extension://${extensionId}/options.html`,
+    });
+    const options = await attach(
+      debugPort,
+      (target) => target.type === 'page' && target.url.includes('options.html'),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+    await capture(options.cdp, '03-options.png');
 
-    const problems = [];
-    if (!workerRunning) problems.push('the extension service worker is not running');
-    for (const [mode, expected] of Object.entries(EXPECTED)) {
-      const actual = result.byMode[mode] ?? 0;
-      if (actual !== expected) problems.push(`expected ${expected} "${mode}" overlays, saw ${actual}`);
-    }
-    if (problems.length) throw new Error(problems.join('; '));
-
-    console.log('\n[smoke] PASS');
-    if (!keepOpen) {
-      cdp.close();
-      browser.close();
-    }
+    console.log('\n[shots] done');
   } catch (error) {
     exitCode = 1;
-    console.error(`\n[smoke] FAIL: ${error.message}`);
-    const relevant = chromeStderr
-      .split('\n')
-      .filter((line) => /extension|manifest|service worker/i.test(line))
-      .slice(0, 15);
-    if (relevant.length) console.error(`[smoke] chrome said:\n${relevant.join('\n')}`);
+    console.error(`\n[shots] FAIL: ${error.message}`);
   } finally {
     if (!keepOpen) {
       child.kill('SIGTERM');
       server.close();
     } else {
-      console.log(`[smoke] left running; devtools on http://127.0.0.1:${debugPort}`);
+      console.log(`[shots] left running; devtools on http://127.0.0.1:${debugPort}`);
     }
   }
-
   process.exit(exitCode);
 }
 
 main().catch((error) => {
-  console.error(`[smoke] crashed: ${error.stack}`);
+  console.error(`[shots] crashed: ${error.stack}`);
   process.exit(1);
 });

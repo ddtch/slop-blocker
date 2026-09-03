@@ -224,8 +224,16 @@ async function main(): Promise<void> {
   applyStaticLabels();
   wireControls();
 
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  tabId = tab?.id ?? null;
+  // As a real popup this resolves to the tab the popup is anchored to. Opened
+  // as an ordinary page — which is how it is inspected and screenshotted —
+  // that query would return the popup's own tab, so `?tabId=` overrides it.
+  const requested = Number(new URLSearchParams(location.search).get('tabId'));
+  if (Number.isInteger(requested) && requested > 0) {
+    tabId = requested;
+  } else {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    tabId = tab?.id ?? null;
+  }
 
   connect();
 

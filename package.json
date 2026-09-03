@@ -2,6 +2,15 @@
   "name": "slop-blocker",
   "version": "0.1.0",
   "description": "Browser extension that detects AI-generated content and hides it behind a click-to-reveal warning.",
+  "license": "MIT",
+  "homepage": "https://github.com/ddtch/slop-blocker",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ddtch/slop-blocker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ddtch/slop-blocker/issues"
+  },
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,6 +18,8 @@
     "watch": "node build.mjs --watch",
     "icons": "node scripts/gen-icons.mjs",
     "fixtures": "node scripts/gen-fixtures.mjs",
+    "shots": "npm run build && node scripts/screenshots.mjs",
+    "pack": "npm run build && node scripts/pack.mjs",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.tools.json",
     "test": "vitest run",
     "test:watch": "vitest",

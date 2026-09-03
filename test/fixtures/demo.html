@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Field Notes — a demo page for Slop Blocker</title>
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        margin: 0;
+        padding: 22px 44px 28px;
+        background: #0d0d11;
+        color: #f4f4f5;
+        font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      header { margin-bottom: 18px; }
+      .brand {
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #71717a;
+        margin: 0 0 7px;
+      }
+      h1 { font-size: 25px; margin: 0 0 5px; letter-spacing: -0.01em; }
+      .sub { color: #a1a1aa; margin: 0; font-size: 13.5px; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        max-width: 1140px;
+      }
+      figure {
+        margin: 0;
+        background: #141419;
+        border: 1px solid #26262e;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      figure img {
+        display: block;
+        width: 100%;
+        height: 204px;
+        object-fit: cover;
+      }
+      figcaption { padding: 11px 16px 13px; }
+      figcaption b { display: block; font-size: 14.5px; margin-bottom: 3px; }
+      figcaption span { display: block; font-size: 13px; color: #a1a1aa; }
+      figcaption i { display: block; font-style: normal; font-size: 12.5px; color: #71717a; margin-top: 8px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <p class="brand">Field Notes</p>
+      <h1>This week in the gallery</h1>
+      <p class="sub">
+        A demo page. The images are generated locally and carry real metadata, so every decision on
+        this page is the extension's own — nothing here is staged.
+      </p>
+    </header>
+
+    <div class="grid">
+      <figure>
+        <img src="media/ai-c2pa.png" alt="Harbour at sunset" />
+        <figcaption>
+          <b>Harbour at sunset</b>
+          <span>Warm light through the cranes, late September.</span>
+          <i>@harbourlight</i>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="media/provenance-clean.png" alt="Morning market" />
+        <figcaption>
+          <b>Morning market</b>
+          <span>Shot on film, scanned at home. No edits beyond the crop.</span>
+          <i>@paperandsilver</i>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="media/ai-xmp.png" alt="Concept study" />
+        <figcaption>
+          <b>Concept study</b>
+          <span>Colour keys for a personal project.</span>
+          <i>@studioquiet</i>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="media/no-metadata.png" alt="Poster experiments" />
+        <figcaption>
+          <b>Poster experiments</b>
+          <span>Made with AI, four hours of prompting. #aiart</span>
+          <i>@promptsmith</i>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="media/generator-c2pa.png" alt="Cover draft" />
+        <figcaption>
+          <b>Cover draft</b>
+          <span>First pass at the cover. Still deciding on the type.</span>
+          <i>@coverdraft</i>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="media/no-metadata.png" alt="Essay illustration" />
+        <figcaption>
+          <b>Why AI-generated art is suddenly everywhere</b>
+          <span>An essay about the flood, and what it is doing to galleries.</span>
+          <i>@essaysonline</i>
+        </figcaption>
+      </figure>
+    </div>
+  </body>
+</html>

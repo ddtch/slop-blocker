@@ -1,0 +1,44 @@
+name: False positive
+description: Something was covered that is not AI-generated
+labels: ["false-positive"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        These are the most valuable reports this project gets. A blocker that covers real content
+        loses trust faster than one that misses things.
+  - type: input
+    id: url
+    attributes:
+      label: Page
+      description: The URL, or a description if it is behind a login.
+    validations:
+      required: true
+  - type: input
+    id: reason
+    attributes:
+      label: The reason line
+      description: >
+        Open the extension popup and copy the reason shown under the item — e.g.
+        "AI markers in the text: ai-generated" or "Content Credentials declare AI generation".
+        This says which signal fired and is the fastest route to a fix.
+    validations:
+      required: true
+  - type: dropdown
+    id: confidence
+    attributes:
+      label: Confidence shown
+      options: [confirmed, likely, suspected, "not sure"]
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why this is not AI-generated
+      description: What is the content actually? If you know the author, say so.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshot, version, browser

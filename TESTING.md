@@ -36,10 +36,13 @@ worker dies on startup, which no jsdom test can see.
 
 Two things it has to work around, worth knowing if you touch it:
 
-- **`--load-extension` does nothing on stable Chrome** since M137. It fails silently: you get a
-  browser with no extension, and a test that reports zero detections as if the code were broken.
-  The script uses `--enable-unsafe-extension-debugging` with the CDP `Extensions.loadUnpacked`
-  command instead.
+- **Neither way of loading an unpacked extension works everywhere.** `--load-extension` does nothing
+  on Chrome M137 and later, and fails silently: you get a browser with no extension, and a test that
+  reports zero detections as if the code were broken. The CDP `Extensions.loadUnpacked` command that
+  replaced it does not exist on Chrome before that, where it fails with `Method not available`. The
+  script passes `--enable-unsafe-extension-debugging` *and* `--load-extension`, tries the CDP
+  command, and falls back to the flag — deriving the extension id from the SHA-256 of the `dist/`
+  path, because the flag reports nothing back.
 - **`--dump-dom` is useless here.** It snapshots before scans debounce and before provenance reads
   return, so it always sees an untouched page. The script drives Chrome over the DevTools Protocol
   and waits.
@@ -139,3 +142,30 @@ If you fix any of these, add a case rather than only fixing it:
   re-insert budget is 3, then it falls back to blur only).
 - A revealed item that gets re-blocked by a later scan.
 - Provenance requests for media far outside the viewport.
+
+## Screenshots and packaging
+
+```bash
+npm run shots   # -> docs/screenshots/, captured from the real extension
+npm run pack    # -> slop-blocker-<version>.zip, and its SHA-256
+```
+
+`npm run shots` drives the same headless Chrome as the smoke test and captures three 1280x800
+frames: `test/fixtures/demo.html` with the overlays in place, the popup, and the options page. The
+demo page runs the real detection paths — the images carry real C2PA and XMP metadata, and the
+`#aiart` caption is scored by the real keyword tiering — so a change in behaviour shows up in the
+screenshots. The only cosmetic liberty is centring the popup on a backdrop, because the Chrome Web
+Store accepts 1280x800 and nothing else.
+
+Two things worth knowing if the popup capture looks wrong:
+
+- The popup resolves its tab with `chrome.tabs.query({ active: true, currentWindow: true })`, which
+  returns the popup's own tab when it is opened as an ordinary page. `popup.html?tabId=<id>`
+  overrides that, and is also the way to inspect the popup with DevTools against a real page.
+- `body` in `popup.css` sets `overflow-y: auto`, which CSS *propagates to the viewport* unless the
+  root element has its own `overflow`. Without setting `overflow` on `<html>`, the body is not a
+  scroll container and the sticky footer falls outside the card.
+
+`npm run pack` writes the store zip deterministically — entries sorted by path, all timestamps fixed,
+file modes zeroed — so the same commit produces the same bytes and the same hash on any machine.
+That hash goes in the release notes. Verify with `npm ci && npm run pack` on a clean checkout.

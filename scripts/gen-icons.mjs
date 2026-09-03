@@ -1,7 +1,15 @@
 // Generates the extension's PNG icons from scratch (no image dependencies).
 //
-// Draws a "no entry" mark — a ring with a diagonal slash — on a dark rounded
-// square, at every size the manifest asks for. Run: npm run icons
+// The mark is a four-point sparkle — the symbol every platform now uses for
+// "AI" — struck through by a slash, on a dark rounded square. A plain
+// prohibition ring was the obvious first choice and the wrong one: it is what
+// every blocker in the category already uses, so it says "blocker" without
+// saying what is blocked. The sparkle says it in one glyph, and survives being
+// scaled to 16px because it is one convex-cornered shape and one bar.
+//
+// The slash is separated from the sparkle by a gap painted back to the
+// background, so at small sizes the two shapes stay readable as two shapes
+// instead of merging into a blob. Run: npm run icons
 //
 // PNGs are written by hand: raw RGBA scanlines, zlib-deflated, wrapped in the
 // three mandatory chunks (IHDR / IDAT / IEND) with CRC32 per chunk.
@@ -14,6 +22,7 @@ const SIZES = [16, 32, 48, 128];
 const OUT_DIR = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'icons');
 
 const BG = [11, 11, 15];
+/** The mark: one colour, so the shape does the work at every size. */
 const MARK = [255, 59, 48];
 
 const crcTable = (() => {
@@ -72,10 +81,23 @@ function blend(base, over, alpha) {
 
 function render(size) {
   const center = size / 2;
-  const outer = size * 0.36;
-  const inner = size * 0.26;
-  const slopeHalfWidth = size * 0.05;
   const cornerRadius = size * 0.22;
+
+  // Sparkle: an astroid, |x|^p + |y|^p <= r^p. p below 1 pulls the edges
+  // inward, which is what turns a diamond into a four-point star; 0.72 is
+  // pointy enough to read as a sparkle and fat enough to survive 16px.
+  // Optical sizing. A 16px tile has about 12 usable pixels across, which is
+  // not enough to hold a four-point star AND a strike through it — the two
+  // shapes collapse into a pair of parallel bars. So the small icons drop the
+  // strike and keep the sparkle's silhouette, which is the part that
+  // identifies us; the large ones carry the full struck-through mark.
+  const small = size <= 32;
+  const sparkleRadius = size * (small ? 0.44 : 0.38);
+  const sparkleExponent = small ? 0.7 : 0.76;
+  // The strike is a knockout back to the background rather than a third
+  // colour: two colours is all a toolbar icon needs, and cutting the sparkle
+  // rather than covering it keeps the silhouette of a struck-through mark.
+  const cutHalfWidth = small ? 0 : size * 0.055;
 
   const insideCard = (x, y) => {
     const dx = Math.max(cornerRadius - x, x - (size - cornerRadius), 0);
@@ -83,30 +105,29 @@ function render(size) {
     return dx * dx + dy * dy <= cornerRadius * cornerRadius;
   };
 
-  const insideRing = (x, y) => {
-    const d = Math.hypot(x - center, y - center);
-    return d <= outer && d >= inner;
+  const insideSparkle = (x, y) => {
+    const dx = Math.abs(x - center) / sparkleRadius;
+    const dy = Math.abs(y - center) / sparkleRadius;
+    return dx ** sparkleExponent + dy ** sparkleExponent <= 1;
   };
 
-  // Diagonal bar, clipped to the ring's outer circle.
-  const insideSlash = (x, y) => {
-    if (Math.hypot(x - center, y - center) > outer) return false;
-    const distanceToDiagonal = Math.abs(x - center + (y - center)) / Math.SQRT2;
-    return distanceToDiagonal <= slopeHalfWidth;
-  };
+  /** The anti-diagonal band through the centre, cut out of the sparkle. */
+  const insideCut = (x, y) =>
+    cutHalfWidth > 0 && Math.abs(x - center + (y - center)) / Math.SQRT2 <= cutHalfWidth;
 
   const pixels = Buffer.alloc(size * (size * 4 + 1));
   let offset = 0;
   for (let y = 0; y < size; y++) {
     pixels[offset++] = 0; // PNG filter type: none
     for (let x = 0; x < size; x++) {
-      const cardAlpha = coverage(x, y, insideCard);
-      const markAlpha = Math.min(1, coverage(x, y, insideRing) + coverage(x, y, insideSlash));
-      const rgb = blend(BG, MARK, markAlpha);
+      let rgb = BG;
+      rgb = blend(rgb, MARK, coverage(x, y, insideSparkle));
+      rgb = blend(rgb, BG, coverage(x, y, insideCut));
+
       pixels[offset++] = rgb[0];
       pixels[offset++] = rgb[1];
       pixels[offset++] = rgb[2];
-      pixels[offset++] = Math.round(255 * cardAlpha);
+      pixels[offset++] = Math.round(255 * coverage(x, y, insideCard));
     }
   }
   return png(size, pixels);

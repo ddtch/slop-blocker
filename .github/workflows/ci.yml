@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Typecheck (both tsconfigs), unit + integration tests, then the build.
+      - run: npm run check
+      # The icons are committed; this fails if they drift from the generator.
+      - run: npm run icons && git diff --exit-code -- icons/
+      # Packages dist/ deterministically and prints the hash the release should carry.
+      - run: npm run pack

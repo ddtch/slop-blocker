@@ -1,0 +1,45 @@
+name: Disclosure strings for a language
+description: Add or correct the exact AI-label text a platform renders in your language
+labels: ["i18n", "lists"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        `lists/disclosure-strings.json` maps platform -> locale -> the exact strings a platform
+        renders for its AI label. We only trust strings someone has seen on a real page.
+
+        Two strings are deliberately excluded and should stay excluded: YouTube's
+        "Captured with a camera", and the "How this content was made" section heading. Both also
+        appear on content that is *not* AI-generated.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [YouTube, TikTok, Instagram, Facebook, X]
+    validations:
+      required: true
+  - type: input
+    id: locale
+    attributes:
+      label: Locale
+      placeholder: "de, pt-br, ja, …"
+    validations:
+      required: true
+  - type: textarea
+    id: strings
+    attributes:
+      label: The strings, exactly as rendered
+      description: One per line. Copy them, do not translate them yourself.
+    validations:
+      required: true
+  - type: input
+    id: seen
+    attributes:
+      label: Where you saw it
+      description: A URL, or a screenshot in the box below.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot

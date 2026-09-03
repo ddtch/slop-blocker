@@ -7,6 +7,24 @@ it blocked, and what trackers the page loaded.
 Implements `SPEC.md`, milestones **M0 + M1**, plus the TikTok / Instagram / X adapters that the spec
 scheduled for M2. See [What is not done yet](#what-is-not-done-yet).
 
+[![CI](https://github.com/ddtch/slop-blocker/actions/workflows/ci.yml/badge.svg)](https://github.com/ddtch/slop-blocker/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+![The overlay on a page: four items covered with the signal that fired, one clean photo untouched,
+and an essay about AI marked "possibly AI content" rather than blocked](docs/screenshots/01-blocked-page.png)
+
+Every block says which signal fired and how sure it is. The essay in the bottom right mentions
+"AI-generated" once and gets a chip, not a shroud — see
+[the false-positive problem](#the-false-positive-problem-and-what-is-done-about-it).
+
+<p align="center">
+  <img src="docs/screenshots/02-popup.png" width="49%" alt="The popup, listing each detection with its reason and confidence tier" />
+  <img src="docs/screenshots/03-options.png" width="49%" alt="The options page" />
+</p>
+
+Screenshots are generated from the built extension in a real browser by `npm run shots` — nothing in
+them is mocked up.
+
 ---
 
 ## How detection works
@@ -65,14 +83,21 @@ Then in Chrome: **chrome://extensions** → enable Developer mode → **Load unp
 ```bash
 npm run check        # typecheck + tests + build, in that order
 npm run smoke        # build, then load dist/ into headless Chrome and assert it blocks
+npm run shots        # regenerate docs/screenshots/ from the real extension
+npm run pack         # build, then write the store zip and print its SHA-256
 npm test             # vitest
 npm run typecheck    # both tsconfigs
 ```
 
 `npm run smoke` is the one test that runs the real extension in a real browser, against
-`test/fixtures/provenance.html`. It expects exactly five covered items and one chip. Note that
-`--load-extension` no longer works on stable Chrome (disabled in M137, and it fails *silently*) — the
-script uses the CDP `Extensions.loadUnpacked` command instead.
+`test/fixtures/provenance.html`. It expects exactly five covered items and one chip. It also asserts
+that the service worker is actually running, which is the failure no jsdom test can see.
+
+Loading an unpacked extension into headless Chrome needs both paths: `--load-extension` was disabled
+in M137 (and fails *silently*, giving you a browser with no extension and a test that reports zero
+detections), while the CDP `Extensions.loadUnpacked` that replaced it does not exist on older
+Chrome. The script passes both flags, tries the command, and falls back to the flag when the method
+is missing.
 
 ---
 
@@ -168,6 +193,21 @@ Two smaller corrections found while building:
 
 ---
 
+## Verifying the build
+
+Everything this extension claims about itself — no server, no telemetry, metadata reads capped and
+sent without credentials — is unverifiable in a minified bundle downloaded from a store. So the
+package is built reproducibly and its hash is published with each release:
+
+```bash
+git checkout v0.1.0
+npm ci && npm run pack     # prints the SHA-256 of slop-blocker-<version>.zip
+```
+
+The hash must match the one in that release's notes. `scripts/pack.mjs` sorts entries by path, fixes
+every timestamp to the epoch the zip format starts at, and zeroes the file modes, so the same commit
+produces the same bytes on any machine.
+
 ## Lists
 
 `lists/` ships four JSON files. Each has a `_readme` explaining its schema and rules.
@@ -210,9 +250,36 @@ Ordered by how much it matters.
    into Chrome and verifies provenance detection, keyword tiering and the overlay on a local page —
    but no automated test visits a platform. The YouTube pause path is covered in jsdom only, because
    asserting it for real means depending on a third-party video that carries the disclosure.
-3. **Facebook** is not implemented (it shares Meta's label but not the markup). **YouTube feed and
+3. **The generic adapter only reads text from `alt`, `title`, `aria-label` and `<figcaption>`.**
+   On a page whose captions live in sibling `<div>`s — which is most of the web — the keyword
+   signal never fires at all, so an undisclosed-but-hashtagged image is only caught if it also
+   carries provenance metadata. Widening this without dragging in unrelated page text is the open
+   design question; see `nearbyText()` in `src/adapters/generic.ts`.
+4. **Facebook** is not implemented (it shares Meta's label but not the markup). **YouTube feed and
    channel pages** are not badged. **Instagram stories** are not covered.
-4. **TikTok's page JSON** (`__UNIVERSAL_DATA_FOR_REHYDRATION__`) is unread; a main-world script like
+5. **TikTok's page JSON** (`__UNIVERSAL_DATA_FOR_REHYDRATION__`) is unread; a main-world script like
    YouTube's would give a pre-render signal that survives badge markup changes.
-5. **No remote list updates** (`settings.listUpdates` is forced to `false`), no notifications, no
+6. **No remote list updates** (`settings.listUpdates` is forced to `false`), no notifications, no
    Firefox build, no CSS background images, no MP4 provenance probing.
+
+---
+
+## Where this is going
+
+- [`docs/competitive-analysis.md`](docs/competitive-analysis.md) — what the other twelve extensions
+  in this category do, what their one-star reviews say, and what is worth taking from each.
+- [`docs/roadmap.md`](docs/roadmap.md) — the plan that came out of it, and the anti-goals.
+- [`SPEC.md`](SPEC.md) — the original specification. Where it and the roadmap disagree, the roadmap wins.
+
+## Contributing
+
+The most useful contribution is a false-positive report: something we covered that we should not
+have. Selector fixes and disclosure strings for languages we do not speak are the next two. See
+[`CONTRIBUTING.md`](CONTRIBUTING.md), which also lists the rules that are not up for negotiation —
+among them that `lists/creators.json` stays empty and that we publish no accuracy percentage.
+
+Security issues: [`SECURITY.md`](SECURITY.md). Report privately.
+
+## Licence
+
+MIT. See [`LICENSE`](LICENSE).

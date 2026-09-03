@@ -14,6 +14,15 @@
   padding: 0;
 }
 
+/*
+ * A class that sets `display` outranks the UA stylesheet's `[hidden]` rule, so
+ * every `element.hidden = true` in the scripts silently did nothing on the
+ * elements styled as flex containers. Restate it once, with weight.
+ */
+[hidden] {
+  display: none !important;
+}
+
 body {
   background: var(--bg);
   color: var(--text);

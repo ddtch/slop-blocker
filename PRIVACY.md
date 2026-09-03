@@ -79,4 +79,10 @@ change that caused it.
 
 ## Contact
 
-Open an issue in the repository.
+Open an issue at <https://github.com/ddtch/slop-blocker/issues>. For anything security-sensitive,
+report it privately instead — see [`SECURITY.md`](SECURITY.md).
+
+The source is at <https://github.com/ddtch/slop-blocker> under the MIT licence, and each release
+publishes the SHA-256 of a reproducible build so you can check that the package in the store is the
+code in the repository. Every claim on this page is meant to be verifiable that way rather than
+taken on trust.

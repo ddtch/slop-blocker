@@ -1,0 +1,40 @@
+name: Detection stopped working on a site
+description: A platform changed its markup and we no longer see its AI label
+labels: ["selector-rot"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Platform markup churns constantly. The fix is almost always confined to one file —
+        `src/adapters/<site>/selectors.ts` — so this is a good issue to also send a PR for.
+  - type: dropdown
+    id: site
+    attributes:
+      label: Site
+      options: [YouTube, TikTok, Instagram, X, other]
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: A page where the content carries the platform's AI label
+      description: >
+        We need a page we can load. Without one, a selector fix cannot be verified.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened
+      description: >
+        Say whether the popup listed the item at all. Nothing listed usually means the candidate
+        was not found; listed but not blocked usually means the disclosure container was not read.
+    validations:
+      required: true
+  - type: textarea
+    id: markup
+    attributes:
+      label: The disclosure markup, if you can grab it
+      description: >
+        Right-click the AI label -> Inspect, and paste the element and a couple of its ancestors.
+      render: html
