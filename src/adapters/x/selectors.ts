@@ -43,3 +43,19 @@ export function parseAuthorHref(href: string): { handle?: string } | null {
   if (!handle || RESERVED.has(handle.toLowerCase())) return null;
   return { handle };
 }
+
+/**
+ * The author and item an X URL is about: "/user" is a profile,
+ * "/user/status/123" is one post.
+ */
+export function parseSubjectPath(pathname: string): {
+  handle?: string;
+  itemId?: string;
+} | null {
+  const match = /^\/([^/?#]+)(?:\/status\/([^/?#]+))?/.exec(pathname);
+  const handle = match?.[1];
+  if (!handle || RESERVED.has(handle.toLowerCase())) return null;
+  const subject: { handle?: string; itemId?: string } = { handle };
+  if (match?.[2]) subject.itemId = `${handle}/status/${match[2]}`;
+  return subject;
+}

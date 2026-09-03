@@ -68,6 +68,24 @@ Both rules have tests (`test/unit/disclosure.test.ts`, `test/integration/youtube
 
 ---
 
+## Quick actions
+
+Open the popup on a YouTube channel or video and it offers **Block channel** and **Block this
+video**, which write straight to your personal lists. The same works on TikTok, Instagram and X
+profiles and posts.
+
+This runs off the URL and the page chrome, not off detection, so it works on a channel we have no
+signal about — which is the point. It also works on a site you switched the extension off on, since
+that is exactly when you are most likely to want it. Both buttons are toggles: press again to undo,
+or edit the lists in the options page.
+
+Blocking an author covers everything of theirs we can see. Blocking one video is the narrower
+decision and wins over trusting its author, so you can trust a channel and still hide one thing on
+it. **Caveat, until feed coverage lands:** a blocked video is covered when you open its page, not
+when its thumbnail appears in a feed — see [What is not done yet](#what-is-not-done-yet).
+
+---
+
 ## Install for development
 
 ```bash
@@ -258,11 +276,14 @@ Ordered by how much it matters.
    signal never fires at all, so an undisclosed-but-hashtagged image is only caught if it also
    carries provenance metadata. Widening this without dragging in unrelated page text is the open
    design question; see `nearbyText()` in `src/adapters/generic.ts`.
-4. **Facebook** is not implemented (it shares Meta's label but not the markup). **YouTube feed and
+4. **Feed thumbnails are not candidates**, so a blocked video or author is only covered on the
+   item's own page, not where its card appears in a feed or in search results. This is the same gap
+   as the YouTube feed badging below, and it is what limits the quick actions.
+5. **Facebook** is not implemented (it shares Meta's label but not the markup). **YouTube feed and
    channel pages** are not badged. **Instagram stories** are not covered.
-5. **TikTok's page JSON** (`__UNIVERSAL_DATA_FOR_REHYDRATION__`) is unread; a main-world script like
+6. **TikTok's page JSON** (`__UNIVERSAL_DATA_FOR_REHYDRATION__`) is unread; a main-world script like
    YouTube's would give a pre-render signal that survives badge markup changes.
-6. **No remote list updates** (`settings.listUpdates` is forced to `false`), no notifications, no
+7. **No remote list updates** (`settings.listUpdates` is forced to `false`), no notifications, no
    Firefox build, no CSS background images, no MP4 provenance probing.
 
 ---

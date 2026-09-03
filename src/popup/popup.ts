@@ -4,7 +4,9 @@
 // registry changes, so the list stays live while the popup is open.
 
 import { PORT_POPUP, send, type PopupPush, type TabState } from '../proto';
-import type { Detection } from '../types';
+import type { CreatorRef, Detection, ItemRef, PageSubject } from '../types';
+import { inCreatorList } from '../core/creators';
+import { inItemList } from '../core/items';
 import { confidenceLabel, mediaTypeLabel, t } from '../core/i18n';
 
 const MEDIA_ICONS: Record<string, string> = {
@@ -16,8 +18,21 @@ const MEDIA_ICONS: Record<string, string> = {
   page: '⬒',
 };
 
+const PLATFORM_NAMES: Record<string, string> = {
+  youtube: 'YouTube',
+  tiktok: 'TikTok',
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  x: 'X',
+};
+
 const elements = {
   master: document.getElementById('master') as HTMLInputElement,
+  quickActions: document.getElementById('quickActions') as HTMLElement,
+  subjectPlatform: document.getElementById('subjectPlatform') as HTMLElement,
+  subjectName: document.getElementById('subjectName') as HTMLElement,
+  subjectItem: document.getElementById('subjectItem') as HTMLElement,
+  quickButtons: document.getElementById('quickButtons') as HTMLElement,
   detections: document.getElementById('detections') as HTMLUListElement,
   empty: document.getElementById('empty') as HTMLElement,
   localeWarning: document.getElementById('localeWarning') as HTMLElement,
@@ -121,6 +136,94 @@ function row(detection: Detection): HTMLLIElement {
   return item;
 }
 
+// ---------------------------------------------------------------------------
+// Quick actions: block the channel or the video you are looking at
+// ---------------------------------------------------------------------------
+
+/** What to call an author on this platform, already in the right case for the button. */
+function creatorNoun(platform: string): string {
+  return platform === 'youtube' ? t('subjectChannel') : t('subjectAuthor');
+}
+
+function itemNoun(platform: string): string {
+  return platform === 'youtube' ? t('subjectVideo') : t('subjectPost');
+}
+
+function creatorLabel(creator: CreatorRef): string {
+  if (creator.name) return creator.name;
+  if (creator.handle) return `@${creator.handle}`;
+  return creator.id ?? '';
+}
+
+function quickButton(label: string, blocked: boolean, onClick: () => void): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = blocked ? 'quick quick--undo' : 'quick';
+  button.textContent = label;
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+/**
+ * Applies a list change from the reply rather than waiting for a push.
+ *
+ * Blocking a creator changes stored lists, not the tab's detections, so the
+ * registry never fires and the popup would otherwise keep showing "Block" after
+ * the click landed.
+ */
+function applyLists(lists: TabState['personalLists'] | undefined): void {
+  if (!lists || !state) return;
+  state.personalLists = lists;
+  renderQuickActions(state);
+}
+
+function renderQuickActions(next: TabState): void {
+  const subject: PageSubject | null = next.subject;
+  const hasSomething = Boolean(subject && (subject.creator || subject.item));
+  elements.quickActions.hidden = !hasSomething;
+  if (!subject || !hasSomething) return;
+
+  elements.subjectPlatform.textContent = PLATFORM_NAMES[subject.platform] ?? subject.platform;
+  elements.subjectName.textContent = subject.creator ? creatorLabel(subject.creator) : '';
+
+  const title = subject.item?.title;
+  elements.subjectItem.hidden = !title;
+  if (title) elements.subjectItem.textContent = title;
+
+  elements.quickButtons.textContent = '';
+
+  const { creator, item } = subject;
+  if (creator) {
+    const blocked = inCreatorList(creator, next.personalLists.blockCreators);
+    const noun = creatorNoun(subject.platform);
+    elements.quickButtons.appendChild(
+      quickButton(t(blocked ? 'popupUnblock' : 'popupBlock', [noun]), blocked, () => {
+        void send({
+          t: 'lists/markCreator',
+          creator,
+          verdict: blocked ? 'none' : 'block',
+        }).then((reply) => applyLists(reply?.lists));
+      }),
+    );
+  }
+
+  if (item) {
+    const blocked = inItemList(item, next.personalLists.blockItems);
+    const noun = itemNoun(subject.platform);
+    elements.quickButtons.appendChild(
+      quickButton(t(blocked ? 'popupUnblock' : 'popupBlock', [noun]), blocked, () => {
+        const payload: ItemRef = { platform: item.platform, id: item.id };
+        if (item.title) payload.title = item.title;
+        void send({
+          t: 'lists/markItem',
+          item: payload,
+          verdict: blocked ? 'none' : 'block',
+        }).then((reply) => applyLists(reply?.lists));
+      }),
+    );
+  }
+}
+
 function renderTrackers(next: TabState): void {
   const { trackerMode } = next.settings;
 
@@ -169,6 +272,8 @@ function render(next: TabState): void {
   elements.disableSite.classList.toggle('link--danger', !siteDisabled);
 
   elements.localeWarning.hidden = !next.localeUnsupported;
+
+  renderQuickActions(next);
 
   elements.detections.textContent = '';
   const sorted = [...next.detections].sort((a, b) => {

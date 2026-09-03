@@ -44,6 +44,7 @@ export function makeContext(overrides: Partial<PageContext> = {}): PageContext {
       blockCreators: [...EMPTY_PERSONAL_LISTS.blockCreators],
       trustCreators: [...EMPTY_PERSONAL_LISTS.trustCreators],
       blockDomains: [...EMPTY_PERSONAL_LISTS.blockDomains],
+      blockItems: [...EMPTY_PERSONAL_LISTS.blockItems],
     },
     lists: bundledLists(),
     ...overrides,

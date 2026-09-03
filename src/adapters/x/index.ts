@@ -1,5 +1,5 @@
 import { createBadgeAdapter } from '../badge-adapter';
-import { AUTHOR_LINK, BADGE, CAPTION, ITEM, MEDIA, PERMALINK, parseAuthorHref } from './selectors';
+import { AUTHOR_LINK, BADGE, CAPTION, ITEM, MEDIA, PERMALINK, parseAuthorHref, parseSubjectPath } from './selectors';
 
 /**
  * X (Twitter), best-effort. There is no platform AI label to read, so this
@@ -18,4 +18,5 @@ export const xAdapter = createBadgeAdapter({
   caption: CAPTION,
   permalink: PERMALINK,
   parseAuthorHref,
+  parseSubjectPath,
 });

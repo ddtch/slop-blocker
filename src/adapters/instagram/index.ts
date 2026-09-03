@@ -1,5 +1,5 @@
 import { createBadgeAdapter } from '../badge-adapter';
-import { AUTHOR_LINK, BADGE, CAPTION, ITEM, MEDIA, PERMALINK, parseAuthorHref } from './selectors';
+import { AUTHOR_LINK, BADGE, CAPTION, ITEM, MEDIA, PERMALINK, parseAuthorHref, parseSubjectPath } from './selectors';
 
 /**
  * Instagram. Meta detects C2PA Content Credentials embedded by Firefly,
@@ -20,4 +20,5 @@ export const instagramAdapter = createBadgeAdapter({
   caption: CAPTION,
   permalink: PERMALINK,
   parseAuthorHref,
+  parseSubjectPath,
 });

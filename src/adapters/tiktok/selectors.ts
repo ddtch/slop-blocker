@@ -35,3 +35,19 @@ export function parseAuthorHref(href: string): { handle?: string } | null {
   const match = /^\/?@([^/?#]+)/.exec(href.replace(/^https?:\/\/[^/]+/, ''));
   return match?.[1] ? { handle: match[1] } : null;
 }
+
+/**
+ * The author and item a TikTok URL is about: "/@user" is a profile,
+ * "/@user/video/123" is one video. Used by the popup's quick actions, which
+ * must work on a profile page where nothing was detected.
+ */
+export function parseSubjectPath(pathname: string): {
+  handle?: string;
+  itemId?: string;
+} | null {
+  const match = /^\/@([^/?#]+)(?:\/video\/([^/?#]+))?/.exec(pathname);
+  if (!match?.[1]) return null;
+  const subject: { handle?: string; itemId?: string } = { handle: match[1] };
+  if (match[2]) subject.itemId = `${match[1]}/video/${match[2]}`;
+  return subject;
+}

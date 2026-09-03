@@ -13,12 +13,14 @@ import {
   type Counters,
   type CreatorLists,
   type DisclosureStrings,
+  type ItemRef,
   type KeywordLists,
   type MediaType,
   type PersonalLists,
   type Settings,
 } from '../types';
 import { creatorKey, normalizeCreator } from '../core/creators';
+import { itemKey, normalizeItem } from '../core/items';
 
 const KEY_SETTINGS = 'settings';
 const KEY_PERSONAL_LISTS = 'personalLists';
@@ -68,21 +70,41 @@ export async function getPersonalLists(): Promise<PersonalLists> {
     blockCreators: Array.isArray(raw.blockCreators) ? raw.blockCreators.map(normalizeCreator) : [],
     trustCreators: Array.isArray(raw.trustCreators) ? raw.trustCreators.map(normalizeCreator) : [],
     blockDomains: Array.isArray(raw.blockDomains) ? raw.blockDomains : [],
+    blockItems: Array.isArray(raw.blockItems) ? raw.blockItems.map(normalizeItem) : [],
   };
 }
 
+/** Normalises and persists. Callers must hold the write chain; see `serialize`. */
+async function writeLists(lists: PersonalLists): Promise<PersonalLists> {
+  const deduped: PersonalLists = {
+    blockCreators: dedupeCreators(lists.blockCreators ?? []),
+    trustCreators: dedupeCreators(lists.trustCreators ?? []),
+    blockDomains: [
+      ...new Set((lists.blockDomains ?? []).map((domain) => domain.trim().toLowerCase()).filter(Boolean)),
+    ],
+    blockItems: dedupeItems(lists.blockItems ?? []),
+  };
+  await chrome.storage.local.set({ [KEY_PERSONAL_LISTS]: deduped });
+  return deduped;
+}
+
 export async function setPersonalLists(lists: PersonalLists): Promise<PersonalLists> {
-  return serialize(async () => {
-    const deduped: PersonalLists = {
-      blockCreators: dedupeCreators(lists.blockCreators ?? []),
-      trustCreators: dedupeCreators(lists.trustCreators ?? []),
-      blockDomains: [
-        ...new Set((lists.blockDomains ?? []).map((domain) => domain.trim().toLowerCase()).filter(Boolean)),
-      ],
-    };
-    await chrome.storage.local.set({ [KEY_PERSONAL_LISTS]: deduped });
-    return deduped;
-  });
+  return serialize(() => writeLists(lists));
+}
+
+/**
+ * Reads, mutates and writes the lists inside a single turn of the write chain.
+ *
+ * The read has to be in here with the write. The popup offers two quick-action
+ * buttons side by side, so blocking a channel and blocking its video land as
+ * two messages a few milliseconds apart; with the read outside the chain both
+ * would start from the same snapshot and the second write would silently
+ * discard the first.
+ */
+async function updateLists(
+  mutate: (lists: PersonalLists) => PersonalLists,
+): Promise<PersonalLists> {
+  return serialize(async () => writeLists(mutate(await getPersonalLists())));
 }
 
 function dedupeCreators(creators: PersonalLists['blockCreators']): PersonalLists['blockCreators'] {
@@ -95,22 +117,52 @@ function dedupeCreators(creators: PersonalLists['blockCreators']): PersonalLists
   return [...seen.values()];
 }
 
-/** Adds a creator to one list and removes it from the other. */
+function dedupeItems(items: ItemRef[]): ItemRef[] {
+  const seen = new Map<string, ItemRef>();
+  for (const item of items) {
+    const normalized = normalizeItem(item);
+    if (!normalized.platform || !normalized.id) continue;
+    seen.set(itemKey(normalized), normalized);
+  }
+  return [...seen.values()];
+}
+
+/**
+ * Moves a creator between the block and trust lists.
+ *
+ * `none` removes them from both, which is what the popup's toggle needs: a
+ * quick action a user cannot undo from the same button is a trap.
+ */
 export async function markCreator(
   creator: PersonalLists['blockCreators'][number],
-  verdict: 'block' | 'trust',
+  verdict: 'block' | 'trust' | 'none',
 ): Promise<PersonalLists> {
-  const lists = await getPersonalLists();
   const normalized = normalizeCreator(creator);
   const key = creatorKey(normalized);
-  const without = (entries: PersonalLists['blockCreators']) =>
-    entries.filter((entry) => creatorKey(entry) !== key);
 
-  return setPersonalLists(
-    verdict === 'block'
-      ? { ...lists, blockCreators: [...without(lists.blockCreators), normalized], trustCreators: without(lists.trustCreators) }
-      : { ...lists, trustCreators: [...without(lists.trustCreators), normalized], blockCreators: without(lists.blockCreators) },
-  );
+  return updateLists((lists) => {
+    const without = (entries: PersonalLists['blockCreators']) =>
+      entries.filter((entry) => creatorKey(entry) !== key);
+
+    const blockCreators = without(lists.blockCreators);
+    const trustCreators = without(lists.trustCreators);
+    if (verdict === 'block') blockCreators.push(normalized);
+    if (verdict === 'trust') trustCreators.push(normalized);
+
+    return { ...lists, blockCreators, trustCreators };
+  });
+}
+
+/** Adds or removes one video/post from the personal block list. */
+export async function markItem(item: ItemRef, verdict: 'block' | 'none'): Promise<PersonalLists> {
+  const normalized = normalizeItem(item);
+  const key = itemKey(normalized);
+
+  return updateLists((lists) => {
+    const blockItems = lists.blockItems.filter((entry) => itemKey(entry) !== key);
+    if (verdict === 'block') blockItems.push(normalized);
+    return { ...lists, blockItems };
+  });
 }
 
 export async function getCounters(): Promise<Counters> {

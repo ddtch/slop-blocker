@@ -4,7 +4,7 @@
 // through to chrome.storage.session and the in-memory Map is only a cache. The
 // popup must never depend on worker-lifetime state.
 
-import type { Detection, MediaType, TrackerStat } from '../types';
+import type { Detection, MediaType, PageSubject, TrackerStat } from '../types';
 
 const MAX_DETECTIONS_PER_TAB = 500;
 const BADGE_CONFIRMED = '#e11d48';
@@ -17,10 +17,12 @@ export interface TabRecord {
   /** Tracker domain -> number of requests seen. */
   trackers: Record<string, number>;
   localeUnsupported: boolean;
+  /** What the page is about, for the popup's quick actions. */
+  subject: PageSubject | null;
 }
 
 function emptyRecord(url = '', hostname = ''): TabRecord {
-  return { url, hostname, detections: [], trackers: {}, localeUnsupported: false };
+  return { url, hostname, detections: [], trackers: {}, localeUnsupported: false, subject: null };
 }
 
 const cache = new Map<number, TabRecord>();
@@ -175,6 +177,15 @@ export async function addTrackers(tabId: number, domains: string[]): Promise<num
   }
   await saveTab(tabId, record);
   return newDomains;
+}
+
+export async function setSubject(tabId: number, subject: PageSubject | null): Promise<void> {
+  const record = await getTab(tabId);
+  // Re-scans report the same subject constantly; only a change is worth a write
+  // and a push to the popup.
+  if (JSON.stringify(record.subject ?? null) === JSON.stringify(subject ?? null)) return;
+  record.subject = subject;
+  await saveTab(tabId, record);
 }
 
 export async function setLocaleUnsupported(tabId: number, unsupported: boolean): Promise<void> {

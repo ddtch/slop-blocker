@@ -63,9 +63,22 @@ panels. Glossity Labs bundles this and it is a real user want, but it is a *diff
 AI-content detection. Ship it as a clearly separate, default-off filter so it never contaminates our
 detection statistics or our single-purpose story.
 
-**R1.5 — Per-item block, not just per-author.** Damnright's "SLOP" button. We can block a creator or
-a domain, but not a single video. Add a per-detection "block this item" that writes the media/video
-id to the personal list, and expose it on the shroud next to the existing trust/block-author buttons.
+**R1.5 — Per-item block, not just per-author. _Done._** Shipped as the popup's quick actions rather
+than a shroud button, which turned out to matter: a shroud only exists where something was detected,
+and the case users actually want is blocking a channel we have *no* signal about. Adapters now
+report a `PageSubject` — who and what the page is about, read from the URL and page chrome — so the
+popup can offer **Block channel** / **Block this video** on any YouTube, TikTok, Instagram or X page,
+including ones where the extension is switched off. `PersonalLists.blockItems` holds the per-item
+list; an item block beats an author trust, because it is the narrower decision.
+
+Two things this exposed, both fixed: personal-list writes were a read-modify-write cycle *outside*
+the serialisation chain, so two quick actions a few milliseconds apart silently discarded one of
+them; and the popup had no way to reflect a list change, because blocking touches stored lists
+rather than the tab's detections and so never fired the registry. Regression tests in
+`test/unit/storage-lists.test.ts`.
+
+**Still open:** the quick actions cover an item on its own page, not its card in a feed. That needs
+R1.1.
 
 ---
 

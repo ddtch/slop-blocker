@@ -37,6 +37,14 @@ export const CHANNEL_LINK = [
   '#upload-info a[href]',
 ];
 
+/** The channel name in a channel page's header, for display only. */
+export const CHANNEL_PAGE_NAME = [
+  'ytd-channel-name #text',
+  '#channel-header #channel-name #text',
+  'yt-dynamic-text-view-model h1',
+  '#channel-header h1',
+];
+
 /** Shorts: each reel is its own item with its own video and metadata. */
 export const SHORTS_ITEM = ['ytd-reel-video-renderer', 'ytd-shorts-player-controls'];
 export const SHORTS_LINK = ['a[href*="/shorts/"]'];
@@ -56,6 +64,19 @@ export function parseChannelHref(href: string): { handle?: string; id?: string }
   } catch {
     return null;
   }
+}
+
+/**
+ * True when the path is a watch/shorts/embed/live page rather than a feed.
+ * Kept here so the adapter never hard-codes a YouTube path shape of its own.
+ */
+export function isVideoPath(pathname: string): boolean {
+  return (
+    pathname.startsWith('/watch') ||
+    pathname.startsWith('/shorts/') ||
+    pathname.startsWith('/embed/') ||
+    pathname.startsWith('/live/')
+  );
 }
 
 /** The video id for a watch or shorts URL. */

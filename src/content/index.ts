@@ -37,8 +37,28 @@ async function main(): Promise<void> {
   const adapter = pickAdapter(ctx.hostname);
   const engine = new Engine(ctx, adapter);
 
+  const isTopFrame = window.top === window;
+
+  /**
+   * Tells the worker what the page is about, for the popup's quick actions.
+   *
+   * Runs regardless of whether blocking is enabled here: "block this channel"
+   * has to work on a site the user switched us off on, which is exactly when
+   * they are most likely to want it. Reads the URL and page chrome only.
+   */
+  const reportSubject = (): void => {
+    if (!isTopFrame) return;
+    let subject = null;
+    try {
+      subject = adapter.subject?.(document, ctx) ?? null;
+    } catch (error) {
+      console.warn(`[slop-blocker] adapter ${adapter.id} subject failed:`, error);
+    }
+    void send({ t: 'page/subject', subject });
+  };
+
   // Only the top frame owns the tab's detection list.
-  if (window.top === window) {
+  if (isTopFrame) {
     void send({ t: 'page/reset', url: pageKey(ctx.href) });
     if (adapter.platform) {
       void send({ t: 'locale/unsupported', unsupported: !localeSupported(adapter.platform, ctx) });
@@ -53,10 +73,17 @@ async function main(): Promise<void> {
 
   observe(
     adapter,
-    () => engine.scan(),
+    () => {
+      engine.scan();
+      // Channel names and video titles render after the URL changes, so the
+      // subject is re-read on every scan; the worker drops no-op updates.
+      reportSubject();
+    },
     (href) => {
-      if (window.top === window) void send({ t: 'page/reset', url: pageKey(href) });
+      if (isTopFrame) void send({ t: 'page/reset', url: pageKey(href) });
+      ctx.href = href;
       engine.navigated(href);
+      reportSubject();
     },
   );
 
@@ -91,6 +118,7 @@ async function main(): Promise<void> {
   syncTrackerWatch(ctx.settings.trackerMode);
 
   engine.scan();
+  reportSubject();
 }
 
 void main().catch((error) => {

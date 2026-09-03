@@ -18,6 +18,9 @@ What the suite covers:
 | `test/unit/trackers.test.ts` | Hostname suffix matching, bare-TLD guard, shape of the shipped list |
 | `test/unit/disclosure.test.ts` | Locale fallback, and that disclosure strings outside a disclosure container are ignored |
 | `test/integration/youtube.test.ts` | Disclosed video → covered, paused, reported; one auto-resume undone; reveal is permanent; trusted authors exempt; the off switches |
+| `test/unit/items.test.ts` | Per-item refs: exact (case-sensitive) id matching, round-tripping the options-page format |
+| `test/unit/subject.test.ts` | What the popup's quick actions act on, per platform, including that a feed yields nothing |
+| `test/unit/storage-lists.test.ts` | Personal lists, and that two concurrent quick actions do not discard each other |
 | `test/integration/generic.test.ts` | Provenance verdicts → confidence; small images skipped; streams not fetched; duplicate images each covered; domain blocklist |
 
 Media fixtures are generated, not downloaded — regenerate with `npm run fixtures`.

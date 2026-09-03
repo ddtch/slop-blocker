@@ -1,92 +1,303 @@
 {
-  "extName": { "message": "Slop Blocker" },
+  "extName": {
+    "message": "Slop Blocker"
+  },
   "extDescription": {
     "message": "Detects AI-generated content and hides it behind a click-to-reveal warning."
   },
-
-  "shroudTitle": { "message": "AI content blocked" },
-  "shroudTitleSuspected": { "message": "Possibly AI content" },
-  "shroudShow": { "message": "Show" },
-  "shroudTrustCreator": { "message": "Always show from this author" },
-  "shroudSettings": { "message": "Settings" },
-  "shroudBlockIt": { "message": "Block it" },
-  "shroudIgnore": { "message": "Ignore" },
-  "shroudPagePrefix": { "message": "This page is mostly AI-generated content" },
-  "shroudPageContinue": { "message": "Continue to page" },
-
-  "reasonPlatformLabel": { "message": "$PLATFORM$ disclosure: $LABEL$", "placeholders": {
-    "platform": { "content": "$1" }, "label": { "content": "$2" } } },
-  "reasonC2pa": { "message": "Content Credentials declare AI generation$DETAIL$", "placeholders": {
-    "detail": { "content": "$1" } } },
-  "reasonIptc": { "message": "Image metadata declares AI generation" },
-  "reasonCreatorList": { "message": "Author is on a known AI-content list" },
-  "reasonKeyword": { "message": "AI markers in the text: $HITS$", "placeholders": {
-    "hits": { "content": "$1" } } },
-  "reasonUserMarked": { "message": "You marked this author as AI content" },
-
-  "confidenceConfirmed": { "message": "confirmed" },
-  "confidenceLikely": { "message": "likely" },
-  "confidenceSuspected": { "message": "suspected" },
-
-  "mediaTypeVideo": { "message": "Video" },
-  "mediaTypeImage": { "message": "Image" },
-  "mediaTypePost": { "message": "Post" },
-  "mediaTypeAudio": { "message": "Audio" },
-  "mediaTypeEmbed": { "message": "Embed" },
-  "mediaTypePage": { "message": "Page" },
-
-  "popupCurrentPage": { "message": "On this page" },
-  "popupEmpty": { "message": "Nothing detected here" },
-  "popupEmptyHint": { "message": "This page looks clean." },
-  "popupSuspectedSection": { "message": "Suspected" },
-  "popupTrackers": { "message": "Trackers found: $COUNT$", "placeholders": {
-    "count": { "content": "$1" } } },
-  "popupTrackersOff": { "message": "Tracker detection is off" },
+  "shroudTitle": {
+    "message": "AI content blocked"
+  },
+  "shroudTitleSuspected": {
+    "message": "Possibly AI content"
+  },
+  "shroudShow": {
+    "message": "Show"
+  },
+  "shroudTrustCreator": {
+    "message": "Always show from this author"
+  },
+  "shroudSettings": {
+    "message": "Settings"
+  },
+  "shroudBlockIt": {
+    "message": "Block it"
+  },
+  "shroudIgnore": {
+    "message": "Ignore"
+  },
+  "shroudPagePrefix": {
+    "message": "This page is mostly AI-generated content"
+  },
+  "shroudPageContinue": {
+    "message": "Continue to page"
+  },
+  "reasonPlatformLabel": {
+    "message": "$PLATFORM$ disclosure: $LABEL$",
+    "placeholders": {
+      "platform": {
+        "content": "$1"
+      },
+      "label": {
+        "content": "$2"
+      }
+    }
+  },
+  "reasonC2pa": {
+    "message": "Content Credentials declare AI generation$DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1"
+      }
+    }
+  },
+  "reasonIptc": {
+    "message": "Image metadata declares AI generation"
+  },
+  "reasonCreatorList": {
+    "message": "Author is on a known AI-content list"
+  },
+  "reasonKeyword": {
+    "message": "AI markers in the text: $HITS$",
+    "placeholders": {
+      "hits": {
+        "content": "$1"
+      }
+    }
+  },
+  "reasonUserMarked": {
+    "message": "You marked this author as AI content"
+  },
+  "confidenceConfirmed": {
+    "message": "confirmed"
+  },
+  "confidenceLikely": {
+    "message": "likely"
+  },
+  "confidenceSuspected": {
+    "message": "suspected"
+  },
+  "mediaTypeVideo": {
+    "message": "Video"
+  },
+  "mediaTypeImage": {
+    "message": "Image"
+  },
+  "mediaTypePost": {
+    "message": "Post"
+  },
+  "mediaTypeAudio": {
+    "message": "Audio"
+  },
+  "mediaTypeEmbed": {
+    "message": "Embed"
+  },
+  "mediaTypePage": {
+    "message": "Page"
+  },
+  "popupCurrentPage": {
+    "message": "On this page"
+  },
+  "popupEmpty": {
+    "message": "Nothing detected here"
+  },
+  "popupEmptyHint": {
+    "message": "This page looks clean."
+  },
+  "popupSuspectedSection": {
+    "message": "Suspected"
+  },
+  "popupTrackers": {
+    "message": "Trackers found: $COUNT$",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupTrackersOff": {
+    "message": "Tracker detection is off"
+  },
   "popupTrackersBlockNote": {
     "message": "Blocking is on. Blocked requests never reach the page, so they are not counted here."
   },
-  "menuBlockCreator": { "message": "Slop Blocker: block this author" },
-  "menuTrustCreator": { "message": "Slop Blocker: trust this author" },
-  "popupLifetime": { "message": "Blocked all-time" },
-  "popupSession": { "message": "This session" },
-  "popupRevealed": { "message": "shown" },
-  "popupTrustCreator": { "message": "Trust author" },
-  "popupOptions": { "message": "Settings" },
-  "popupDisableSite": { "message": "Off on this site" },
-  "popupEnabled": { "message": "Protection on" },
-  "popupDisabled": { "message": "Protection off" },
-  "popupPaused": { "message": "Video paused" },
-  "popupLocaleWarning": { "message": "Detection may be limited for this page language." },
-
-  "optionsTitle": { "message": "Slop Blocker settings" },
-  "optionsGeneral": { "message": "General" },
-  "optionsEnabled": { "message": "Enable Slop Blocker" },
-  "optionsAutoPause": { "message": "Pause AI videos automatically" },
-  "optionsThreshold": { "message": "Block when detection is" },
-  "optionsThresholdConfirmed": { "message": "Confirmed only" },
-  "optionsThresholdLikely": { "message": "Confirmed and likely (recommended)" },
-  "optionsThresholdSuspected": { "message": "Everything, including suspected" },
-  "optionsWholePage": { "message": "Block whole pages that are mostly AI content" },
-  "optionsWholePageThreshold": { "message": "Detections needed to block a page" },
-  "optionsTrackers": { "message": "Trackers" },
-  "optionsTrackerOff": { "message": "Off" },
-  "optionsTrackerCount": { "message": "Count only (recommended)" },
-  "optionsTrackerBlock": { "message": "Count and block" },
-  "optionsLists": { "message": "Your lists" },
-  "optionsBlockedCreators": { "message": "Blocked authors" },
-  "optionsTrustedCreators": { "message": "Trusted authors" },
-  "optionsBlockedDomains": { "message": "Blocked sites" },
-  "optionsDisabledSites": { "message": "Sites where Slop Blocker is off" },
-  "optionsAddPlaceholder": { "message": "platform:handle, e.g. youtube:@channel" },
-  "optionsDomainPlaceholder": { "message": "example.com" },
-  "optionsAdd": { "message": "Add" },
-  "optionsRemove": { "message": "Remove" },
-  "optionsEmptyList": { "message": "Empty" },
-  "optionsExport": { "message": "Export lists" },
-  "optionsImport": { "message": "Import lists" },
-  "optionsStats": { "message": "Statistics" },
-  "optionsResetStats": { "message": "Reset statistics" },
-  "optionsResetConfirm": { "message": "Reset all counters to zero?" },
-  "optionsSaved": { "message": "Saved" },
-  "optionsImportFailed": { "message": "Import failed: file is not a valid list export." }
+  "menuBlockCreator": {
+    "message": "Slop Blocker: block this author"
+  },
+  "menuTrustCreator": {
+    "message": "Slop Blocker: trust this author"
+  },
+  "popupLifetime": {
+    "message": "Blocked all-time"
+  },
+  "popupSession": {
+    "message": "This session"
+  },
+  "popupRevealed": {
+    "message": "shown"
+  },
+  "popupTrustCreator": {
+    "message": "Trust author"
+  },
+  "popupOptions": {
+    "message": "Settings"
+  },
+  "popupDisableSite": {
+    "message": "Off on this site"
+  },
+  "popupEnabled": {
+    "message": "Protection on"
+  },
+  "popupDisabled": {
+    "message": "Protection off"
+  },
+  "popupPaused": {
+    "message": "Video paused"
+  },
+  "popupLocaleWarning": {
+    "message": "Detection may be limited for this page language."
+  },
+  "optionsTitle": {
+    "message": "Slop Blocker settings"
+  },
+  "optionsGeneral": {
+    "message": "General"
+  },
+  "optionsEnabled": {
+    "message": "Enable Slop Blocker"
+  },
+  "optionsAutoPause": {
+    "message": "Pause AI videos automatically"
+  },
+  "optionsThreshold": {
+    "message": "Block when detection is"
+  },
+  "optionsThresholdConfirmed": {
+    "message": "Confirmed only"
+  },
+  "optionsThresholdLikely": {
+    "message": "Confirmed and likely (recommended)"
+  },
+  "optionsThresholdSuspected": {
+    "message": "Everything, including suspected"
+  },
+  "optionsWholePage": {
+    "message": "Block whole pages that are mostly AI content"
+  },
+  "optionsWholePageThreshold": {
+    "message": "Detections needed to block a page"
+  },
+  "optionsTrackers": {
+    "message": "Trackers"
+  },
+  "optionsTrackerOff": {
+    "message": "Off"
+  },
+  "optionsTrackerCount": {
+    "message": "Count only (recommended)"
+  },
+  "optionsTrackerBlock": {
+    "message": "Count and block"
+  },
+  "optionsLists": {
+    "message": "Your lists"
+  },
+  "optionsBlockedCreators": {
+    "message": "Blocked authors"
+  },
+  "optionsTrustedCreators": {
+    "message": "Trusted authors"
+  },
+  "optionsBlockedDomains": {
+    "message": "Blocked sites"
+  },
+  "optionsDisabledSites": {
+    "message": "Sites where Slop Blocker is off"
+  },
+  "optionsAddPlaceholder": {
+    "message": "platform:handle, e.g. youtube:@channel"
+  },
+  "optionsDomainPlaceholder": {
+    "message": "example.com"
+  },
+  "optionsAdd": {
+    "message": "Add"
+  },
+  "optionsRemove": {
+    "message": "Remove"
+  },
+  "optionsEmptyList": {
+    "message": "Empty"
+  },
+  "optionsExport": {
+    "message": "Export lists"
+  },
+  "optionsImport": {
+    "message": "Import lists"
+  },
+  "optionsStats": {
+    "message": "Statistics"
+  },
+  "optionsResetStats": {
+    "message": "Reset statistics"
+  },
+  "optionsResetConfirm": {
+    "message": "Reset all counters to zero?"
+  },
+  "optionsSaved": {
+    "message": "Saved"
+  },
+  "optionsImportFailed": {
+    "message": "Import failed: file is not a valid list export."
+  },
+  "popupQuickActions": {
+    "message": "Quick actions",
+    "description": "Heading of the popup section holding the block buttons for the current page"
+  },
+  "popupBlock": {
+    "message": "Block $SUBJECT$",
+    "description": "Quick-action button. $SUBJECT$ is a noun phrase such as \"channel\" or \"this video\".",
+    "placeholders": {
+      "subject": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupUnblock": {
+    "message": "Unblock $SUBJECT$",
+    "description": "Quick-action button shown when the subject is already blocked.",
+    "placeholders": {
+      "subject": {
+        "content": "$1"
+      }
+    }
+  },
+  "subjectChannel": {
+    "message": "channel",
+    "description": "Noun for a YouTube account, as it appears inside the Block/Unblock button"
+  },
+  "subjectAuthor": {
+    "message": "author",
+    "description": "Noun for an account on platforms other than YouTube"
+  },
+  "subjectVideo": {
+    "message": "this video",
+    "description": "Noun phrase for a single YouTube video"
+  },
+  "subjectPost": {
+    "message": "this post",
+    "description": "Noun phrase for a single post on platforms other than YouTube"
+  },
+  "reasonUserMarkedItem": {
+    "message": "You blocked this video",
+    "description": "Reason shown when the user blocked this specific item"
+  },
+  "optionsBlockedItems": {
+    "message": "Blocked videos and posts",
+    "description": "Options page: heading of the per-item block list"
+  },
+  "optionsItemPlaceholder": {
+    "message": "platform:id, e.g. youtube:dQw4w9WgXcQ",
+    "description": "Options page: input hint for the per-item block list"
+  }
 }

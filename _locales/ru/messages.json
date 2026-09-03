@@ -1,92 +1,303 @@
 {
-  "extName": { "message": "Slop Blocker" },
+  "extName": {
+    "message": "Slop Blocker"
+  },
   "extDescription": {
     "message": "Находит контент, сгенерированный ИИ, и скрывает его под предупреждением до клика."
   },
-
-  "shroudTitle": { "message": "AI-контент заблокирован" },
-  "shroudTitleSuspected": { "message": "Возможно, AI-контент" },
-  "shroudShow": { "message": "Показать" },
-  "shroudTrustCreator": { "message": "Показывать всегда от этого автора" },
-  "shroudSettings": { "message": "Настройки" },
-  "shroudBlockIt": { "message": "Заблокировать" },
-  "shroudIgnore": { "message": "Игнорировать" },
-  "shroudPagePrefix": { "message": "На этой странице в основном AI-контент" },
-  "shroudPageContinue": { "message": "Всё равно открыть" },
-
-  "reasonPlatformLabel": { "message": "$PLATFORM$: метка «$LABEL$»", "placeholders": {
-    "platform": { "content": "$1" }, "label": { "content": "$2" } } },
-  "reasonC2pa": { "message": "Content Credentials: заявлена генерация ИИ$DETAIL$", "placeholders": {
-    "detail": { "content": "$1" } } },
-  "reasonIptc": { "message": "Метаданные изображения: заявлена генерация ИИ" },
-  "reasonCreatorList": { "message": "Автор в списке известных AI-аккаунтов" },
-  "reasonKeyword": { "message": "AI-маркеры в тексте: $HITS$", "placeholders": {
-    "hits": { "content": "$1" } } },
-  "reasonUserMarked": { "message": "Вы отметили этого автора как AI-контент" },
-
-  "confidenceConfirmed": { "message": "подтверждено" },
-  "confidenceLikely": { "message": "скорее всего" },
-  "confidenceSuspected": { "message": "под вопросом" },
-
-  "mediaTypeVideo": { "message": "Видео" },
-  "mediaTypeImage": { "message": "Изображение" },
-  "mediaTypePost": { "message": "Пост" },
-  "mediaTypeAudio": { "message": "Аудио" },
-  "mediaTypeEmbed": { "message": "Встроенный плеер" },
-  "mediaTypePage": { "message": "Страница" },
-
-  "popupCurrentPage": { "message": "На этой странице" },
-  "popupEmpty": { "message": "Ничего не найдено" },
-  "popupEmptyHint": { "message": "На этой странице чисто ✨" },
-  "popupSuspectedSection": { "message": "Под вопросом" },
-  "popupTrackers": { "message": "Найдено трекеров: $COUNT$", "placeholders": {
-    "count": { "content": "$1" } } },
-  "popupTrackersOff": { "message": "Поиск трекеров выключен" },
+  "shroudTitle": {
+    "message": "AI-контент заблокирован"
+  },
+  "shroudTitleSuspected": {
+    "message": "Возможно, AI-контент"
+  },
+  "shroudShow": {
+    "message": "Показать"
+  },
+  "shroudTrustCreator": {
+    "message": "Показывать всегда от этого автора"
+  },
+  "shroudSettings": {
+    "message": "Настройки"
+  },
+  "shroudBlockIt": {
+    "message": "Заблокировать"
+  },
+  "shroudIgnore": {
+    "message": "Игнорировать"
+  },
+  "shroudPagePrefix": {
+    "message": "На этой странице в основном AI-контент"
+  },
+  "shroudPageContinue": {
+    "message": "Всё равно открыть"
+  },
+  "reasonPlatformLabel": {
+    "message": "$PLATFORM$: метка «$LABEL$»",
+    "placeholders": {
+      "platform": {
+        "content": "$1"
+      },
+      "label": {
+        "content": "$2"
+      }
+    }
+  },
+  "reasonC2pa": {
+    "message": "Content Credentials: заявлена генерация ИИ$DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1"
+      }
+    }
+  },
+  "reasonIptc": {
+    "message": "Метаданные изображения: заявлена генерация ИИ"
+  },
+  "reasonCreatorList": {
+    "message": "Автор в списке известных AI-аккаунтов"
+  },
+  "reasonKeyword": {
+    "message": "AI-маркеры в тексте: $HITS$",
+    "placeholders": {
+      "hits": {
+        "content": "$1"
+      }
+    }
+  },
+  "reasonUserMarked": {
+    "message": "Вы отметили этого автора как AI-контент"
+  },
+  "confidenceConfirmed": {
+    "message": "подтверждено"
+  },
+  "confidenceLikely": {
+    "message": "скорее всего"
+  },
+  "confidenceSuspected": {
+    "message": "под вопросом"
+  },
+  "mediaTypeVideo": {
+    "message": "Видео"
+  },
+  "mediaTypeImage": {
+    "message": "Изображение"
+  },
+  "mediaTypePost": {
+    "message": "Пост"
+  },
+  "mediaTypeAudio": {
+    "message": "Аудио"
+  },
+  "mediaTypeEmbed": {
+    "message": "Встроенный плеер"
+  },
+  "mediaTypePage": {
+    "message": "Страница"
+  },
+  "popupCurrentPage": {
+    "message": "На этой странице"
+  },
+  "popupEmpty": {
+    "message": "Ничего не найдено"
+  },
+  "popupEmptyHint": {
+    "message": "На этой странице чисто ✨"
+  },
+  "popupSuspectedSection": {
+    "message": "Под вопросом"
+  },
+  "popupTrackers": {
+    "message": "Найдено трекеров: $COUNT$",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupTrackersOff": {
+    "message": "Поиск трекеров выключен"
+  },
   "popupTrackersBlockNote": {
     "message": "Блокировка включена. Заблокированные запросы не доходят до страницы, поэтому здесь они не учитываются."
   },
-  "menuBlockCreator": { "message": "Slop Blocker: заблокировать автора" },
-  "menuTrustCreator": { "message": "Slop Blocker: доверять автору" },
-  "popupLifetime": { "message": "Всего заблокировано" },
-  "popupSession": { "message": "За эту сессию" },
-  "popupRevealed": { "message": "показано" },
-  "popupTrustCreator": { "message": "Доверять автору" },
-  "popupOptions": { "message": "Настройки" },
-  "popupDisableSite": { "message": "Выключить на этом сайте" },
-  "popupEnabled": { "message": "Защита включена" },
-  "popupDisabled": { "message": "Защита выключена" },
-  "popupPaused": { "message": "Видео поставлено на паузу" },
-  "popupLocaleWarning": { "message": "Для языка этой страницы детекция может быть неполной." },
-
-  "optionsTitle": { "message": "Настройки Slop Blocker" },
-  "optionsGeneral": { "message": "Основное" },
-  "optionsEnabled": { "message": "Включить Slop Blocker" },
-  "optionsAutoPause": { "message": "Автоматически ставить AI-видео на паузу" },
-  "optionsThreshold": { "message": "Блокировать, когда детекция" },
-  "optionsThresholdConfirmed": { "message": "Только подтверждённая" },
-  "optionsThresholdLikely": { "message": "Подтверждённая и вероятная (рекомендуется)" },
-  "optionsThresholdSuspected": { "message": "Всё, включая спорное" },
-  "optionsWholePage": { "message": "Блокировать страницы целиком, если на них в основном AI-контент" },
-  "optionsWholePageThreshold": { "message": "Сколько находок нужно для блокировки страницы" },
-  "optionsTrackers": { "message": "Трекеры" },
-  "optionsTrackerOff": { "message": "Выключено" },
-  "optionsTrackerCount": { "message": "Только считать (рекомендуется)" },
-  "optionsTrackerBlock": { "message": "Считать и блокировать" },
-  "optionsLists": { "message": "Ваши списки" },
-  "optionsBlockedCreators": { "message": "Заблокированные авторы" },
-  "optionsTrustedCreators": { "message": "Доверенные авторы" },
-  "optionsBlockedDomains": { "message": "Заблокированные сайты" },
-  "optionsDisabledSites": { "message": "Сайты, где Slop Blocker выключен" },
-  "optionsAddPlaceholder": { "message": "платформа:аккаунт, например youtube:@channel" },
-  "optionsDomainPlaceholder": { "message": "example.com" },
-  "optionsAdd": { "message": "Добавить" },
-  "optionsRemove": { "message": "Удалить" },
-  "optionsEmptyList": { "message": "Пусто" },
-  "optionsExport": { "message": "Экспорт списков" },
-  "optionsImport": { "message": "Импорт списков" },
-  "optionsStats": { "message": "Статистика" },
-  "optionsResetStats": { "message": "Сбросить статистику" },
-  "optionsResetConfirm": { "message": "Обнулить все счётчики?" },
-  "optionsSaved": { "message": "Сохранено" },
-  "optionsImportFailed": { "message": "Не удалось импортировать: файл не похож на экспорт списков." }
+  "menuBlockCreator": {
+    "message": "Slop Blocker: заблокировать автора"
+  },
+  "menuTrustCreator": {
+    "message": "Slop Blocker: доверять автору"
+  },
+  "popupLifetime": {
+    "message": "Всего заблокировано"
+  },
+  "popupSession": {
+    "message": "За эту сессию"
+  },
+  "popupRevealed": {
+    "message": "показано"
+  },
+  "popupTrustCreator": {
+    "message": "Доверять автору"
+  },
+  "popupOptions": {
+    "message": "Настройки"
+  },
+  "popupDisableSite": {
+    "message": "Выключить на этом сайте"
+  },
+  "popupEnabled": {
+    "message": "Защита включена"
+  },
+  "popupDisabled": {
+    "message": "Защита выключена"
+  },
+  "popupPaused": {
+    "message": "Видео поставлено на паузу"
+  },
+  "popupLocaleWarning": {
+    "message": "Для языка этой страницы детекция может быть неполной."
+  },
+  "optionsTitle": {
+    "message": "Настройки Slop Blocker"
+  },
+  "optionsGeneral": {
+    "message": "Основное"
+  },
+  "optionsEnabled": {
+    "message": "Включить Slop Blocker"
+  },
+  "optionsAutoPause": {
+    "message": "Автоматически ставить AI-видео на паузу"
+  },
+  "optionsThreshold": {
+    "message": "Блокировать, когда детекция"
+  },
+  "optionsThresholdConfirmed": {
+    "message": "Только подтверждённая"
+  },
+  "optionsThresholdLikely": {
+    "message": "Подтверждённая и вероятная (рекомендуется)"
+  },
+  "optionsThresholdSuspected": {
+    "message": "Всё, включая спорное"
+  },
+  "optionsWholePage": {
+    "message": "Блокировать страницы целиком, если на них в основном AI-контент"
+  },
+  "optionsWholePageThreshold": {
+    "message": "Сколько находок нужно для блокировки страницы"
+  },
+  "optionsTrackers": {
+    "message": "Трекеры"
+  },
+  "optionsTrackerOff": {
+    "message": "Выключено"
+  },
+  "optionsTrackerCount": {
+    "message": "Только считать (рекомендуется)"
+  },
+  "optionsTrackerBlock": {
+    "message": "Считать и блокировать"
+  },
+  "optionsLists": {
+    "message": "Ваши списки"
+  },
+  "optionsBlockedCreators": {
+    "message": "Заблокированные авторы"
+  },
+  "optionsTrustedCreators": {
+    "message": "Доверенные авторы"
+  },
+  "optionsBlockedDomains": {
+    "message": "Заблокированные сайты"
+  },
+  "optionsDisabledSites": {
+    "message": "Сайты, где Slop Blocker выключен"
+  },
+  "optionsAddPlaceholder": {
+    "message": "платформа:аккаунт, например youtube:@channel"
+  },
+  "optionsDomainPlaceholder": {
+    "message": "example.com"
+  },
+  "optionsAdd": {
+    "message": "Добавить"
+  },
+  "optionsRemove": {
+    "message": "Удалить"
+  },
+  "optionsEmptyList": {
+    "message": "Пусто"
+  },
+  "optionsExport": {
+    "message": "Экспорт списков"
+  },
+  "optionsImport": {
+    "message": "Импорт списков"
+  },
+  "optionsStats": {
+    "message": "Статистика"
+  },
+  "optionsResetStats": {
+    "message": "Сбросить статистику"
+  },
+  "optionsResetConfirm": {
+    "message": "Обнулить все счётчики?"
+  },
+  "optionsSaved": {
+    "message": "Сохранено"
+  },
+  "optionsImportFailed": {
+    "message": "Не удалось импортировать: файл не похож на экспорт списков."
+  },
+  "popupQuickActions": {
+    "message": "Быстрые действия",
+    "description": "Heading of the popup section holding the block buttons for the current page"
+  },
+  "popupBlock": {
+    "message": "Заблокировать $SUBJECT$",
+    "description": "Quick-action button. $SUBJECT$ is a noun phrase in the accusative case.",
+    "placeholders": {
+      "subject": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupUnblock": {
+    "message": "Разблокировать $SUBJECT$",
+    "description": "Quick-action button shown when the subject is already blocked.",
+    "placeholders": {
+      "subject": {
+        "content": "$1"
+      }
+    }
+  },
+  "subjectChannel": {
+    "message": "канал",
+    "description": "Noun for a YouTube account, accusative case, as it appears inside the button"
+  },
+  "subjectAuthor": {
+    "message": "автора",
+    "description": "Noun for an account on other platforms, accusative case"
+  },
+  "subjectVideo": {
+    "message": "это видео",
+    "description": "Noun phrase for a single YouTube video, accusative case"
+  },
+  "subjectPost": {
+    "message": "эту публикацию",
+    "description": "Noun phrase for a single post, accusative case"
+  },
+  "reasonUserMarkedItem": {
+    "message": "Вы заблокировали это видео",
+    "description": "Reason shown when the user blocked this specific item"
+  },
+  "optionsBlockedItems": {
+    "message": "Заблокированные видео и посты",
+    "description": "Options page: heading of the per-item block list"
+  },
+  "optionsItemPlaceholder": {
+    "message": "платформа:id, например youtube:dQw4w9WgXcQ",
+    "description": "Options page: input hint for the per-item block list"
+  }
 }

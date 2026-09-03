@@ -1,4 +1,4 @@
-import type { CreatorRef, MediaType, PageContext } from '../types';
+import type { CreatorRef, ItemRef, MediaType, PageContext, PageSubject } from '../types';
 
 /** A platform's own AI disclosure, found on a specific media item. */
 export interface PlatformLabel {
@@ -27,6 +27,8 @@ export interface MediaCandidate {
   /** Caption/title/alt text used for keyword scoring; capped by the adapter. */
   text: string;
   creator?: CreatorRef;
+  /** The platform's identity for this exact video or post, when there is one. */
+  itemRef?: ItemRef;
   platformLabel?: PlatformLabel;
   /** Video to pause when this candidate is blocked. */
   video?: HTMLVideoElement;
@@ -38,6 +40,15 @@ export interface SiteAdapter {
   /** Platform key for disclosure-string lookups; undefined for the generic adapter. */
   platform?: string;
   candidates(root: ParentNode, ctx: PageContext): MediaCandidate[];
+  /**
+   * Who and what this page is about, independent of anything detected on it.
+   *
+   * The popup's quick actions need an author to block on a channel page where
+   * nothing fired — that is the whole point of them — so this reads the URL and
+   * the page chrome rather than the media. Returns null when the page is not
+   * about one identifiable author or item (a feed, a search results page).
+   */
+  subject?(root: ParentNode, ctx: PageContext): PageSubject | null;
   /** Subscribe to in-page navigation; returns an unsubscribe function. */
   onNavigate?(callback: () => void): () => void;
   /** One-time setup, e.g. listening for main-world messages. */

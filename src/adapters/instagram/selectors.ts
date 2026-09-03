@@ -44,3 +44,23 @@ export function parseAuthorHref(href: string): { handle?: string } | null {
   if (!handle || RESERVED.has(handle.toLowerCase())) return null;
   return { handle };
 }
+
+/**
+ * The author and item an Instagram URL is about.
+ *
+ * A post URL ("/p/CODE", "/reel/CODE") names the item but not its author —
+ * Instagram does not put the username in it — so the popup falls back to the
+ * author read out of the post chrome for those pages.
+ */
+export function parseSubjectPath(pathname: string): {
+  handle?: string;
+  itemId?: string;
+} | null {
+  const post = /^\/(?:p|reel)\/([^/?#]+)/.exec(pathname);
+  if (post?.[1]) return { itemId: post[1] };
+
+  const profile = /^\/([^/?#]+)\/?$/.exec(pathname);
+  const handle = profile?.[1];
+  if (!handle || RESERVED.has(handle.toLowerCase())) return null;
+  return { handle };
+}

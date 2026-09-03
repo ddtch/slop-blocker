@@ -8,6 +8,8 @@ import type {
   Counters,
   CreatorRef,
   Detection,
+  ItemRef,
+  PageSubject,
   PersonalLists,
   Settings,
   TrackerStat,
@@ -37,8 +39,16 @@ export interface TabState {
   trackerTotal: number;
   counters: Counters;
   settings: Settings;
+  /** So the popup can show its quick actions as toggles rather than one-way doors. */
+  personalLists: PersonalLists;
   /** Hostname of the tab, so the popup can offer "off on this site". */
   hostname: string;
+  /**
+   * What the page is about — the channel, the video — so the popup can offer
+   * quick actions even when nothing was detected. Null off a supported site,
+   * and on feed pages that are not about one thing.
+   */
+  subject: PageSubject | null;
   /** True when the page language has no disclosure-string coverage. */
   localeUnsupported: boolean;
 }
@@ -52,6 +62,8 @@ export type Msg =
   | { t: 'detections/revealed'; id: string }
   | { t: 'provenance/check'; urls: string[] }
   | { t: 'trackers/report'; domains: string[] }
+  /** Who and what the page is about, for the popup's quick actions. */
+  | { t: 'page/subject'; subject: PageSubject | null }
   | { t: 'locale/unsupported'; unsupported: boolean }
   /** Content scripts cannot call chrome.runtime.openOptionsPage themselves. */
   | { t: 'options/open' }
@@ -60,7 +72,9 @@ export type Msg =
   | { t: 'settings/get' }
   | { t: 'settings/set'; patch: Partial<Settings> }
   | { t: 'lists/get' }
-  | { t: 'lists/markCreator'; creator: CreatorRef; verdict: 'block' | 'trust' }
+  /** `none` removes the creator from both lists, so the popup toggle can undo. */
+  | { t: 'lists/markCreator'; creator: CreatorRef; verdict: 'block' | 'trust' | 'none' }
+  | { t: 'lists/markItem'; item: ItemRef; verdict: 'block' | 'none' }
   | { t: 'lists/set'; lists: PersonalLists }
   | { t: 'stats/get' }
   | { t: 'stats/reset' }
@@ -78,6 +92,7 @@ export type Reply = {
   'detections/revealed': { ok: true };
   'provenance/check': { results: Record<string, ProvenanceVerdict> };
   'trackers/report': { ok: true };
+  'page/subject': { ok: true };
   'locale/unsupported': { ok: true };
   'options/open': { ok: true };
   'tab/state': TabState;
@@ -85,6 +100,7 @@ export type Reply = {
   'settings/set': { settings: Settings };
   'lists/get': { lists: PersonalLists };
   'lists/markCreator': { lists: PersonalLists };
+  'lists/markItem': { lists: PersonalLists };
   'lists/set': { lists: PersonalLists };
   'stats/get': { counters: Counters };
   'stats/reset': { counters: Counters };

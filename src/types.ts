@@ -25,6 +25,35 @@ export interface CreatorRef {
   name?: string;
 }
 
+/**
+ * One specific piece of content on a platform: a single video, a single post.
+ *
+ * Separate from `CreatorRef` because blocking an author and blocking one thing
+ * they made are different decisions, and users want both.
+ */
+export interface ItemRef {
+  platform: string;
+  /** Platform-stable id: a YouTube video id, a post permalink path. */
+  id: string;
+  /** Display only — never used for matching. */
+  title?: string;
+}
+
+/**
+ * What the current page is *about*, as opposed to what was detected on it.
+ *
+ * The popup's quick actions need an author and an item even when nothing was
+ * detected — the whole point is to block a channel that we have no signal on.
+ * Adapters fill this in from the URL and page chrome, not from media.
+ */
+export interface PageSubject {
+  platform: string;
+  /** Whose page or video this is. */
+  creator?: CreatorRef;
+  /** The specific item being viewed, when the page is about exactly one. */
+  item?: ItemRef;
+}
+
 export interface Detection {
   /** Stable across re-renders of the same media on the same page. */
   id: string;
@@ -91,12 +120,15 @@ export interface PersonalLists {
   blockCreators: CreatorRef[];
   trustCreators: CreatorRef[];
   blockDomains: string[];
+  /** Individual videos and posts the user blocked, rather than their author. */
+  blockItems: ItemRef[];
 }
 
 export const EMPTY_PERSONAL_LISTS: PersonalLists = {
   blockCreators: [],
   trustCreators: [],
   blockDomains: [],
+  blockItems: [],
 };
 
 export interface Counters {

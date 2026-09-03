@@ -245,6 +245,50 @@ describe('user lists', () => {
     await flushReports();
     expect(reportedDetections()[0]?.source).toContain('user-marked');
   });
+
+  it('blocks and pauses one video the user blocked, leaving the author alone', async () => {
+    renderWatchPage({ disclosed: false, title: 'Repairing a 1970s radio, part four' });
+    const { pause } = stubVideo(document.querySelector('video') as HTMLVideoElement, true);
+
+    const ctx = makeContext({ href: WATCH_URL });
+    ctx.personalLists.blockItems.push({ platform: 'youtube', id: 'abc123' });
+    engine = new Engine(ctx, youtubeAdapter);
+    engine.scan();
+
+    expect(blockOverlays()).toHaveLength(1);
+    expect(pause).toHaveBeenCalled();
+
+    await flushReports();
+    expect(reportedDetections()[0]?.confidence).toBe('confirmed');
+  });
+
+  it('leaves a different video by the same author alone', () => {
+    renderWatchPage({ disclosed: false, title: 'Repairing a 1970s radio, part five' });
+    stubVideo(document.querySelector('video') as HTMLVideoElement, true);
+
+    const ctx = makeContext({ href: 'https://www.youtube.com/watch?v=different' });
+    ctx.personalLists.blockItems.push({ platform: 'youtube', id: 'abc123' });
+    engine = new Engine(ctx, youtubeAdapter);
+    engine.scan();
+
+    expect(blockOverlays()).toHaveLength(0);
+  });
+
+  // Blocking one video is a narrower decision than trusting its author, so it
+  // wins. Otherwise the quick action would silently do nothing on a trusted
+  // channel, with no way for the user to tell why.
+  it('blocks a video the user blocked even when its author is trusted', () => {
+    renderWatchPage({ disclosed: false, title: 'clip' });
+    stubVideo(document.querySelector('video') as HTMLVideoElement, true);
+
+    const ctx = makeContext({ href: WATCH_URL });
+    ctx.personalLists.trustCreators.push({ platform: 'youtube', handle: 'slopchannel' });
+    ctx.personalLists.blockItems.push({ platform: 'youtube', id: 'abc123' });
+    engine = new Engine(ctx, youtubeAdapter);
+    engine.scan();
+
+    expect(blockOverlays()).toHaveLength(1);
+  });
 });
 
 describe('being switched off', () => {

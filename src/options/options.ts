@@ -3,9 +3,15 @@
 import { send } from '../proto';
 import type { PersonalLists, Settings, Threshold, TrackerMode } from '../types';
 import { formatCreator, parseCreator } from '../core/creators';
+import { formatItem, parseItem } from '../core/items';
 import { t } from '../core/i18n';
 
-type ListName = 'blockCreators' | 'trustCreators' | 'blockDomains' | 'disabledSites';
+type ListName =
+  | 'blockCreators'
+  | 'trustCreators'
+  | 'blockDomains'
+  | 'blockItems'
+  | 'disabledSites';
 
 let settings: Settings | null = null;
 let lists: PersonalLists | null = null;
@@ -83,6 +89,12 @@ function entriesFor(name: ListName): string[] {
       return lists.trustCreators.map(formatCreator);
     case 'blockDomains':
       return [...lists.blockDomains];
+    case 'blockItems':
+      // The title, when we captured one, is what makes an opaque video id
+      // recognisable months later — but only the id is ever matched on.
+      return lists.blockItems.map((item) =>
+        item.title ? `${formatItem(item)}  —  ${item.title}` : formatItem(item),
+      );
     case 'disabledSites':
       return [...settings.disabledSites];
   }
@@ -100,6 +112,10 @@ async function removeEntry(name: ListName, index: number): Promise<void> {
     await saveLists({ ...lists, blockDomains: lists.blockDomains.filter((_, i) => i !== index) });
     return;
   }
+  if (name === 'blockItems') {
+    await saveLists({ ...lists, blockItems: lists.blockItems.filter((_, i) => i !== index) });
+    return;
+  }
   const key = name;
   await saveLists({ ...lists, [key]: lists[key].filter((_, i) => i !== index) });
 }
@@ -115,6 +131,16 @@ async function addEntry(name: ListName, raw: string): Promise<void> {
   }
   if (name === 'blockDomains') {
     await saveLists({ ...lists, blockDomains: [...lists.blockDomains, value.toLowerCase()] });
+    return;
+  }
+
+  if (name === 'blockItems') {
+    const item = parseItem(value);
+    if (!item) {
+      toast(t('optionsItemPlaceholder'));
+      return;
+    }
+    await saveLists({ ...lists, blockItems: [...lists.blockItems, item] });
     return;
   }
 
@@ -203,6 +229,7 @@ async function importLists(file: File): Promise<void> {
       blockCreators: Array.isArray(imported.blockCreators) ? imported.blockCreators : [],
       trustCreators: Array.isArray(imported.trustCreators) ? imported.trustCreators : [],
       blockDomains: Array.isArray(imported.blockDomains) ? imported.blockDomains : [],
+      blockItems: Array.isArray(imported.blockItems) ? imported.blockItems : [],
     });
   } catch {
     toast(t('optionsImportFailed'));

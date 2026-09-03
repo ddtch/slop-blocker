@@ -5,12 +5,13 @@
 //   1. the player response captured by the main-world script (fast, pre-playback)
 //   2. the rendered disclosure UI in the DOM (works even if the JSON shape changes)
 
-import type { CreatorRef, PageContext } from '../../types';
+import type { CreatorRef, ItemRef, PageContext, PageSubject } from '../../types';
 import { disclosureStrings } from '../disclosure';
 import { findDisclosure } from '../disclosure';
 import { queryAll, queryFirst, textOf, domPath, type MediaCandidate, type SiteAdapter } from '../types';
 import {
   CHANNEL_LINK,
+  CHANNEL_PAGE_NAME,
   DESCRIPTION,
   DISCLOSURE_CONTAINERS,
   PLAYER,
@@ -19,6 +20,7 @@ import {
   SHORTS_TEXT,
   TITLE,
   VIDEO,
+  isVideoPath,
   parseChannelHref,
   parseVideoId,
 } from './selectors';
@@ -106,7 +108,10 @@ function watchCandidate(root: ParentNode, ctx: PageContext): MediaCandidate | nu
     key: videoId ? `yt:${videoId}` : domPath(player),
     text: textOf(queryFirst(root, TITLE)?.textContent, queryFirst(root, DESCRIPTION)?.textContent),
   };
-  if (videoId) candidate.mediaUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  if (videoId) {
+    candidate.mediaUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    candidate.itemRef = { platform: PLATFORM, id: videoId };
+  }
   if (video instanceof HTMLVideoElement) candidate.video = video;
   const creator = creatorFrom(root);
   if (creator) candidate.creator = creator;
@@ -133,7 +138,10 @@ function shortsCandidates(root: ParentNode, ctx: PageContext): MediaCandidate[] 
       text: textOf(...queryAll(item, SHORTS_TEXT).map((element) => element.textContent)),
       video,
     };
-    if (videoId) candidate.mediaUrl = `https://www.youtube.com/shorts/${videoId}`;
+    if (videoId) {
+      candidate.mediaUrl = `https://www.youtube.com/shorts/${videoId}`;
+      candidate.itemRef = { platform: PLATFORM, id: videoId };
+    }
     const creator = creatorFrom(item);
     if (creator) candidate.creator = creator;
     if (label) candidate.platformLabel = { platform: PLATFORM, label };
@@ -141,6 +149,47 @@ function shortsCandidates(root: ParentNode, ctx: PageContext): MediaCandidate[] 
   }
 
   return candidates;
+}
+
+/**
+ * What the popup's quick actions act on.
+ *
+ * Read from the URL first and the DOM only for display names, because this has
+ * to work on a channel page where nothing was detected and possibly before the
+ * page has finished rendering.
+ */
+function subject(root: ParentNode, ctx: PageContext): PageSubject | null {
+  const { pathname } = new URL(ctx.href, 'https://www.youtube.com');
+  const result: PageSubject = { platform: PLATFORM };
+
+  if (isVideoPath(pathname)) {
+    const videoId = parseVideoId(ctx.href);
+    if (videoId) {
+      const item: ItemRef = { platform: PLATFORM, id: videoId };
+      const title = queryFirst(root, TITLE)?.textContent?.trim();
+      if (title) item.title = title;
+      result.item = item;
+    }
+    const creator = creatorFrom(root);
+    if (creator) result.creator = creator;
+    return result.item || result.creator ? result : null;
+  }
+
+  // A channel page — /@handle, /channel/UC…, /c/name, /user/name — and every
+  // tab under it (/videos, /streams, /playlists), which share the prefix.
+  const parsed = parseChannelHref(pathname);
+  if (parsed) {
+    const creator: CreatorRef = { platform: PLATFORM };
+    if (parsed.id) creator.id = parsed.id;
+    if (parsed.handle) creator.handle = parsed.handle;
+    const name = queryFirst(root, CHANNEL_PAGE_NAME)?.textContent?.trim();
+    if (name) creator.name = name;
+    result.creator = creator;
+    return result;
+  }
+
+  // Home, search, subscriptions: no single subject to act on.
+  return null;
 }
 
 export const youtubeAdapter: SiteAdapter = {
@@ -169,6 +218,8 @@ export const youtubeAdapter: SiteAdapter = {
       for (const name of events) window.removeEventListener(name, handler, true);
     };
   },
+
+  subject,
 
   candidates(root: ParentNode, ctx: PageContext): MediaCandidate[] {
     const path = new URL(ctx.href, 'https://www.youtube.com').pathname;

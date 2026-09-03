@@ -3,7 +3,7 @@
 // the creator list and keyword scoring can work per post rather than per image.
 
 import { normalizeMediaUrl } from '../core/hash';
-import type { CreatorRef, MediaType, PageContext } from '../types';
+import type { CreatorRef, ItemRef, MediaType, PageContext, PageSubject } from '../types';
 import { disclosureStrings, findDisclosure } from './disclosure';
 import {
   disambiguateKeys,
@@ -34,6 +34,12 @@ export interface BadgeAdapterConfig {
   permalink?: string[];
   /** Parses a profile URL into a creator identity. */
   parseAuthorHref(href: string): { handle?: string; id?: string } | null;
+  /**
+   * Parses the *current page's* path into the author and item it is about, for
+   * the popup's quick actions. Distinct from `parseAuthorHref`, which reads
+   * links found inside a feed item.
+   */
+  parseSubjectPath?(pathname: string): { handle?: string; itemId?: string } | null;
   /** In-page navigation events worth a rescan. */
   navigateEvents?: string[];
 }
@@ -79,6 +85,7 @@ export function createBadgeAdapter(config: BadgeAdapterConfig): SiteAdapter {
           : null;
 
         const mediaType: MediaType = media instanceof HTMLVideoElement ? 'video' : 'post';
+        const itemId = permalink ? itemIdFromPermalink(permalink, config) : null;
         const key = permalink
           ? `${config.platform}:${permalink}`
           : source
@@ -106,6 +113,7 @@ export function createBadgeAdapter(config: BadgeAdapterConfig): SiteAdapter {
 
         const creator = creatorOf(item, config);
         if (creator) candidate.creator = creator;
+        if (itemId) candidate.itemRef = { platform: config.platform, id: itemId };
 
         candidates.push(candidate);
       }
@@ -113,6 +121,32 @@ export function createBadgeAdapter(config: BadgeAdapterConfig): SiteAdapter {
       return disambiguateKeys(candidates);
     },
   };
+
+  if (config.parseSubjectPath) {
+    const parseSubjectPath = config.parseSubjectPath;
+    adapter.subject = (item, ctx) => {
+      let pathname: string;
+      try {
+        pathname = new URL(ctx.href).pathname;
+      } catch {
+        return null;
+      }
+      const parsed = parseSubjectPath(pathname);
+      if (!parsed) return null;
+
+      const subject: PageSubject = { platform: config.platform };
+      if (parsed.handle) subject.creator = { platform: config.platform, handle: parsed.handle };
+      if (parsed.itemId) subject.item = { platform: config.platform, id: parsed.itemId };
+
+      // Instagram post URLs name the item but not its author, so fall back to
+      // the author in the post chrome. Costs a query only on those pages.
+      if (!subject.creator) {
+        const creator = creatorOf(item, config);
+        if (creator) subject.creator = creator;
+      }
+      return subject.creator || subject.item ? subject : null;
+    };
+  }
 
   if (config.navigateEvents?.length) {
     const events = config.navigateEvents;
@@ -126,6 +160,23 @@ export function createBadgeAdapter(config: BadgeAdapterConfig): SiteAdapter {
   }
 
   return adapter;
+}
+
+/**
+ * A stable id for one post, taken from its permalink path.
+ *
+ * The path rather than the full URL, so the same post found via a relative
+ * href in a feed and an absolute one on its own page produce the same id.
+ */
+function itemIdFromPermalink(permalink: string, config: BadgeAdapterConfig): string | null {
+  let pathname: string;
+  try {
+    pathname = new URL(permalink, `https://${config.platform}.invalid`).pathname;
+  } catch {
+    return null;
+  }
+  const parsed = config.parseSubjectPath?.(pathname);
+  return parsed?.itemId ?? null;
 }
 
 function creatorOf(item: ParentNode, config: BadgeAdapterConfig): CreatorRef | undefined {

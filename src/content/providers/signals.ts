@@ -5,6 +5,7 @@
 import type { ProvenanceVerdict } from '../../proto';
 import type { PageContext, PartialDetection } from '../../types';
 import { inBundledCreatorList, inCreatorList, matchDomain } from '../../core/creators';
+import { inItemList } from '../../core/items';
 import { keywordConfidence, scoreKeywords } from '../../core/keywords';
 import { t } from '../../core/i18n';
 import type { MediaCandidate } from '../../adapters/types';
@@ -40,6 +41,13 @@ export function userMarkedSignal(candidate: MediaCandidate, ctx: PageContext): P
   if (!candidate.creator) return null;
   if (!inCreatorList(candidate.creator, ctx.personalLists.blockCreators)) return null;
   return { source: 'user-marked', confidence: 'confirmed', reason: t('reasonUserMarked') };
+}
+
+/** The user blocked this exact video or post, rather than its author. */
+export function userMarkedItemSignal(candidate: MediaCandidate, ctx: PageContext): PartialDetection | null {
+  if (!candidate.itemRef) return null;
+  if (!inItemList(candidate.itemRef, ctx.personalLists.blockItems)) return null;
+  return { source: 'user-marked', confidence: 'confirmed', reason: t('reasonUserMarkedItem') };
 }
 
 /** The bundled/community list of accounts known for AI content. */
@@ -88,16 +96,30 @@ export function domainSignal(ctx: PageContext): PartialDetection | null {
   return { source: 'user-marked', confidence: 'confirmed', reason: t('reasonCreatorList') };
 }
 
-/** True when the user has explicitly trusted this author. */
+/**
+ * True when the user has explicitly trusted this author.
+ *
+ * Blocking one video by an otherwise-trusted author is a narrower decision than
+ * trusting the author, so it wins. Without this, "block this video" would do
+ * nothing on a channel the user had trusted, with no indication why.
+ */
 export function isTrusted(candidate: MediaCandidate, ctx: PageContext): boolean {
   if (!candidate.creator) return false;
+  if (candidate.itemRef && inItemList(candidate.itemRef, ctx.personalLists.blockItems)) return false;
   return inCreatorList(candidate.creator, ctx.personalLists.trustCreators);
 }
 
 /** All synchronous signals for one candidate. */
 export function collectSignals(candidate: MediaCandidate, ctx: PageContext): PartialDetection[] {
   const signals: PartialDetection[] = [];
-  for (const provider of [platformLabelSignal, userMarkedSignal, creatorListSignal, keywordSignal]) {
+  const providers = [
+    platformLabelSignal,
+    userMarkedSignal,
+    userMarkedItemSignal,
+    creatorListSignal,
+    keywordSignal,
+  ];
+  for (const provider of providers) {
     try {
       const signal = provider(candidate, ctx);
       if (signal) signals.push(signal);

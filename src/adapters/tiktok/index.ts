@@ -1,5 +1,5 @@
 import { createBadgeAdapter } from '../badge-adapter';
-import { AUTHOR_LINK, BADGE, CAPTION, ITEM, MEDIA, PERMALINK, parseAuthorHref } from './selectors';
+import { AUTHOR_LINK, BADGE, CAPTION, ITEM, MEDIA, PERMALINK, parseAuthorHref, parseSubjectPath } from './selectors';
 
 /**
  * TikTok auto-labels AI content from C2PA Content Credentials, so its badge is
@@ -17,4 +17,5 @@ export const tiktokAdapter = createBadgeAdapter({
   caption: CAPTION,
   permalink: PERMALINK,
   parseAuthorHref,
+  parseSubjectPath,
 });

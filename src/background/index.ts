@@ -10,6 +10,7 @@ import {
   getSettings,
   loadBundledLists,
   markCreator,
+  markItem,
   resetCounters,
   setPersonalLists,
   setSettings,
@@ -23,6 +24,7 @@ import {
   reportDetections,
   resetTab,
   setLocaleUnsupported,
+  setSubject,
   trackerStats,
   trackerTotal,
   updateBadge,
@@ -48,14 +50,21 @@ async function hostnameOf(tabId: number, fallback: string): Promise<string> {
 }
 
 async function buildTabState(tabId: number): Promise<TabState> {
-  const [record, counters, settings] = await Promise.all([getTab(tabId), getCounters(), getSettings()]);
+  const [record, counters, settings, personalLists] = await Promise.all([
+    getTab(tabId),
+    getCounters(),
+    getSettings(),
+    getPersonalLists(),
+  ]);
   return {
     detections: [...record.detections].sort((a, b) => b.detectedAt - a.detectedAt),
     trackers: trackerStats(record),
     trackerTotal: trackerTotal(record),
     counters,
     settings,
+    personalLists,
     hostname: await hostnameOf(tabId, record.hostname),
+    subject: record.subject,
     localeUnsupported: record.localeUnsupported,
   };
 }
@@ -136,6 +145,15 @@ async function handle(msg: Msg, sender: chrome.runtime.MessageSender): Promise<u
       return { ok: true };
     }
 
+    case 'page/subject': {
+      // Sub-frames must not overwrite the top frame's subject: an embedded
+      // YouTube player would replace the article you are actually reading.
+      if (senderTabId !== undefined && sender.frameId === 0) {
+        await setSubject(senderTabId, msg.subject);
+      }
+      return { ok: true };
+    }
+
     case 'locale/unsupported': {
       if (senderTabId !== undefined) await setLocaleUnsupported(senderTabId, msg.unsupported);
       return { ok: true };
@@ -168,6 +186,12 @@ async function handle(msg: Msg, sender: chrome.runtime.MessageSender): Promise<u
 
     case 'lists/markCreator': {
       const lists = await markCreator(msg.creator, msg.verdict);
+      await broadcastSettings();
+      return { lists };
+    }
+
+    case 'lists/markItem': {
+      const lists = await markItem(msg.item, msg.verdict);
       await broadcastSettings();
       return { lists };
     }
