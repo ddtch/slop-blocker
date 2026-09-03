@@ -39,8 +39,35 @@ export function observe(
   let stopped = false;
   let lastHref = location.href;
 
+  /**
+   * Every scan trigger goes through here, and every one of them first checks
+   * whether the URL changed.
+   *
+   * `popstate` and `hashchange` do not fire for `history.pushState`, which is
+   * how TikTok, Instagram and X move between a feed and a post — and a content
+   * script cannot patch `history.pushState`, because the page's own call runs
+   * in a different world with its own bindings. So the only reliable signal is
+   * that the URL is not what it was, checked whenever something else already
+   * woke us up. A same-document navigation always mutates the DOM, so a
+   * mutation batch is on its way regardless.
+   *
+   * Missing this left the popup's quick actions computing from the URL the page
+   * was first opened at: on a TikTok video reached from the feed, that was the
+   * feed, which is about nobody, so no buttons appeared.
+   */
+  const tick = () => {
+    if (stopped) return;
+    const href = location.href;
+    if (href !== lastHref) {
+      lastHref = href;
+      onNavigate(href);
+      return;
+    }
+    onScan();
+  };
+
   const scan = () => {
-    if (!stopped) idle(onScan);
+    if (!stopped) idle(tick);
   };
 
   const debounce = (
@@ -104,6 +131,13 @@ export function observe(
   window.addEventListener('popstate', handleNavigation);
   window.addEventListener('hashchange', handleNavigation);
 
+  // The Navigation API does see same-document pushState navigations, and sees
+  // them immediately rather than on the next mutation batch. Not in every
+  // browser we may end up in, so `tick` remains the guarantee and this is the
+  // latency improvement on top of it.
+  const navigation = (window as unknown as { navigation?: EventTarget }).navigation;
+  navigation?.addEventListener('navigatesuccess', handleNavigation);
+
   return {
     trigger: () => onScan(),
     stop: () => {
@@ -112,6 +146,7 @@ export function observe(
       window.removeEventListener('scroll', onScroll, { capture: true });
       window.removeEventListener('popstate', handleNavigation);
       window.removeEventListener('hashchange', handleNavigation);
+      navigation?.removeEventListener('navigatesuccess', handleNavigation);
       unsubscribeAdapter?.();
       for (const timer of [mutationTimer, scrollTimer, ...navigationTimers]) {
         if (timer !== null) clearTimeout(timer);

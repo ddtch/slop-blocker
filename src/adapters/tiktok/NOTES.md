@@ -9,6 +9,34 @@ TikTok reads C2PA Content Credentials on upload and labels AI content itself,
 without waiting for the creator to disclose. When the badge is there, it is
 there for everyone — no locale-specific creator behaviour to guess at.
 
+## What a live page has told us so far (2026-09-03)
+
+One screenshot of a real, labelled video page:
+
+- The badge reads **"Contains AI-generated media"**, bottom-left of the video,
+  under the caption. That string is now in `lists/disclosure-strings.json` and
+  is the only entry in that file confirmed against a live page.
+- We detected **nothing** on that page. The badge was visible and the popup said
+  "Nothing detected here", so either no `ITEM` matched (most likely — the
+  single-video page shares no container with the feed) or no `BADGE` did.
+- The URL was `tiktok.com/@handle/video/<id>`, which the quick actions now read.
+
+**Still needed, and it is one console command on that page:**
+
+```js
+const el = [...document.querySelectorAll('*')]
+  .find((n) => n.childElementCount === 0 && /contains ai-generated/i.test(n.textContent || ''));
+let node = el, out = [];
+for (let i = 0; node && i < 8; i++, node = node.parentElement) {
+  out.push({ tag: node.tagName, cls: node.className, e2e: node.dataset?.e2e, aria: node.getAttribute('aria-label') });
+}
+copy(JSON.stringify(out, null, 2));
+```
+
+That gives the badge's own hooks and seven ancestors, which is everything needed
+to replace the guesses in `BADGE` and `ITEM` with one verified selector each and
+set `LAST_VERIFIED`.
+
 ## Before you trust this
 
 `BADGE` is the whole adapter. Verify it on a real labelled video:

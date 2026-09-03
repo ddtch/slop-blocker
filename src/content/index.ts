@@ -48,6 +48,9 @@ async function main(): Promise<void> {
    */
   const reportSubject = (): void => {
     if (!isTopFrame) return;
+    // Read the URL fresh. A same-document navigation we have not been told
+    // about yet would otherwise be described using the previous page's URL.
+    ctx.href = location.href;
     let subject = null;
     try {
       subject = adapter.subject?.(document, ctx) ?? null;

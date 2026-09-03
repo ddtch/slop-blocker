@@ -31,6 +31,7 @@ const elements = {
   quickActions: document.getElementById('quickActions') as HTMLElement,
   subjectPlatform: document.getElementById('subjectPlatform') as HTMLElement,
   subjectName: document.getElementById('subjectName') as HTMLElement,
+  subjectHandle: document.getElementById('subjectHandle') as HTMLElement,
   subjectItem: document.getElementById('subjectItem') as HTMLElement,
   quickButtons: document.getElementById('quickButtons') as HTMLElement,
   detections: document.getElementById('detections') as HTMLUListElement,
@@ -140,11 +141,6 @@ function row(detection: Detection): HTMLLIElement {
 // Quick actions: block the channel or the video you are looking at
 // ---------------------------------------------------------------------------
 
-/** What to call an author on this platform, already in the right case for the button. */
-function creatorNoun(platform: string): string {
-  return platform === 'youtube' ? t('subjectChannel') : t('subjectAuthor');
-}
-
 function itemNoun(platform: string): string {
   return platform === 'youtube' ? t('subjectVideo') : t('subjectPost');
 }
@@ -153,6 +149,21 @@ function creatorLabel(creator: CreatorRef): string {
   if (creator.name) return creator.name;
   if (creator.handle) return `@${creator.handle}`;
   return creator.id ?? '';
+}
+
+/**
+ * What goes inside the button, e.g. "Block @albertatech".
+ *
+ * Naming the account in the button rather than saying "channel" is the whole
+ * difference between a control you can press confidently and one you have to
+ * reason about first. The handle wins over the display name because it is what
+ * the block list matches on, so the button says exactly what will be stored.
+ */
+function creatorButtonSubject(creator: CreatorRef, platform: string): string {
+  if (creator.handle) return `@${creator.handle}`;
+  if (creator.name) return creator.name;
+  if (creator.id) return creator.id;
+  return platform === 'youtube' ? t('subjectChannel') : t('subjectAuthor');
 }
 
 function quickButton(label: string, blocked: boolean, onClick: () => void): HTMLButtonElement {
@@ -185,6 +196,11 @@ function renderQuickActions(next: TabState): void {
 
   elements.subjectPlatform.textContent = PLATFORM_NAMES[subject.platform] ?? subject.platform;
   elements.subjectName.textContent = subject.creator ? creatorLabel(subject.creator) : '';
+  // Only worth showing when it adds something the name line does not.
+  const handle = subject.creator?.handle;
+  const showHandle = Boolean(handle && subject.creator?.name);
+  elements.subjectHandle.hidden = !showHandle;
+  elements.subjectHandle.textContent = showHandle ? `@${handle}` : '';
 
   const title = subject.item?.title;
   elements.subjectItem.hidden = !title;
@@ -195,7 +211,7 @@ function renderQuickActions(next: TabState): void {
   const { creator, item } = subject;
   if (creator) {
     const blocked = inCreatorList(creator, next.personalLists.blockCreators);
-    const noun = creatorNoun(subject.platform);
+    const noun = creatorButtonSubject(creator, subject.platform);
     elements.quickButtons.appendChild(
       quickButton(t(blocked ? 'popupUnblock' : 'popupBlock', [noun]), blocked, () => {
         void send({

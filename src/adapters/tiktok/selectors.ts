@@ -3,10 +3,21 @@
 export const LAST_VERIFIED = '2026-09-03';
 export const VERIFIED_AGAINST = 'written from public documentation; NOT yet confirmed on a live page';
 
+/**
+ * Feed items, and the single-video page.
+ *
+ * The last three cover a video opened on its own URL (or as the modal you get
+ * from the feed), which shares none of the feed's containers — reported from a
+ * live page where the AI badge was plainly visible and we found no candidate at
+ * all, so nothing was detected.
+ */
 export const ITEM = [
   'div[data-e2e="recommend-list-item-container"]',
   'div[data-e2e="feed-video"]',
   'div[data-e2e="search_top-item"]',
+  'div[data-e2e="browse-video"]',
+  'div[data-e2e="video-detail"]',
+  'div[class*="DivVideoDetailContainer"]',
   'article',
 ];
 
@@ -19,10 +30,18 @@ export const MEDIA = ['video', 'img[src*="tiktokcdn"]'];
 export const BADGE = [
   '[data-e2e="video-ai-label"]',
   '[data-e2e="aigc-label"]',
+  '[data-e2e="aigc-tag"]',
   '[aria-label*="AI-generated" i]',
   '[aria-label*="AIGC" i]',
   '[class*="AIGCLabel"]',
   '[class*="AigcLabel"]',
+  '[class*="AiGeneratedLabel" i]',
+  // The badge renders as a pill in the video chrome. These are the containers
+  // it has been seen in; none is confirmed, and every one of them is still
+  // *only* chrome — adding the caption here would block every video that talks
+  // about AI. See NOTES.md.
+  '[class*="DivAigc" i]',
+  '[class*="SpanAigc" i]',
 ];
 
 export const AUTHOR_LINK = ['a[href^="/@"]', '[data-e2e="video-author-uniqueid"]'];

@@ -19,8 +19,13 @@
     "NOT AI-generated — matching them would block camera footage."
   ],
   "_meta": {
-    "lastVerified": null,
-    "note": "No entry has been confirmed against a live page yet."
+    "lastVerified": "2026-09-03",
+    "note": "Only tiktok.en \"Contains AI-generated media\" has been seen on a live page (a tiktok.com video page, 2026-09-03). Everything else is still written from public documentation and unconfirmed. Add a date here when you verify more, and say which entries the date covers.",
+    "verified": {
+      "tiktok.en": [
+        "Contains AI-generated media"
+      ]
+    }
   },
   "youtube": {
     "en": [
@@ -33,18 +38,66 @@
       "Измененный или синтетический контент",
       "Звук или изображение существенно изменены или созданы цифровым способом",
       "синтетический контент"
+    ],
+    "es": [
+      "Contenido alterado o sintético",
+      "El sonido o las imágenes se editaron o generaron digitalmente de forma significativa",
+      "contenido sintético"
     ]
   },
   "tiktok": {
-    "en": ["AI-generated", "AI generated", "Creator labeled as AI-generated", "AIGC"],
-    "ru": ["Создано ИИ", "Сгенерировано ИИ", "Контент, созданный ИИ"]
+    "en": [
+      "Contains AI-generated content",
+      "Contains AI-generated media",
+      "AI-generated",
+      "AI generated",
+      "Creator labeled as AI-generated",
+      "AIGC"
+    ],
+    "ru": [
+      "Создано ИИ",
+      "Сгенерировано ИИ",
+      "Контент, созданный ИИ"
+    ],
+    "es": [
+      "Contiene contenido generado por IA",
+      "Contenido generado por IA",
+      "Generado por IA",
+      "Creado con IA"
+    ]
   },
   "instagram": {
-    "en": ["AI info", "Made with AI", "AI-generated", "AI content"],
-    "ru": ["Информация об ИИ", "Создано с помощью ИИ", "Сгенерировано ИИ"]
+    "en": [
+      "AI info",
+      "Made with AI",
+      "AI-generated",
+      "AI content"
+    ],
+    "ru": [
+      "Информация об ИИ",
+      "Создано с помощью ИИ",
+      "Сгенерировано ИИ"
+    ],
+    "es": [
+      "Información de IA",
+      "Hecho con IA",
+      "Generado por IA"
+    ]
   },
   "facebook": {
-    "en": ["AI info", "Made with AI", "AI-generated"],
-    "ru": ["Информация об ИИ", "Создано с помощью ИИ"]
+    "en": [
+      "AI info",
+      "Made with AI",
+      "AI-generated"
+    ],
+    "ru": [
+      "Информация об ИИ",
+      "Создано с помощью ИИ"
+    ],
+    "es": [
+      "Información de IA",
+      "Hecho con IA",
+      "Generado por IA"
+    ]
   }
 }

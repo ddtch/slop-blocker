@@ -64,6 +64,20 @@ describe('findDisclosure', () => {
     expect(findDisclosure([html('<div>Altered or synthetic content</div>')], [])).toBeNull();
   });
 
+  // The only string in lists/disclosure-strings.json confirmed against a live
+  // page: TikTok renders exactly this under a labelled video.
+  it('matches the wording TikTok actually renders', () => {
+    const tiktok = disclosureStrings('tiktok', makeContext({ locale: 'en' }));
+    const badge = html('<div class="badge">Contains AI-generated media</div>');
+    expect(findDisclosure([badge], tiktok)).toBe('Contains AI-generated media');
+  });
+
+  it('still matches that badge for a Spanish page', () => {
+    const tiktok = disclosureStrings('tiktok', makeContext({ locale: 'es' }));
+    const badge = html('<div class="badge">Contiene contenido generado por IA</div>');
+    expect(findDisclosure([badge], tiktok)).toBe('Contiene contenido generado por IA');
+  });
+
   // This is the guard that keeps a video *about* AI labelling from blocking
   // itself: the disclosure text exists on the page, but not in a disclosure
   // container, and only containers are ever searched.

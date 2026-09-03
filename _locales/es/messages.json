@@ -1,0 +1,303 @@
+{
+  "extName": {
+    "message": "Slop Blocker"
+  },
+  "extDescription": {
+    "message": "Detecta contenido generado por IA y lo oculta tras un aviso que puedes descubrir con un clic."
+  },
+  "shroudTitle": {
+    "message": "Contenido de IA bloqueado"
+  },
+  "shroudTitleSuspected": {
+    "message": "Posible contenido de IA"
+  },
+  "shroudShow": {
+    "message": "Mostrar"
+  },
+  "shroudTrustCreator": {
+    "message": "Mostrar siempre a este autor"
+  },
+  "shroudSettings": {
+    "message": "Ajustes"
+  },
+  "shroudBlockIt": {
+    "message": "Bloquear"
+  },
+  "shroudIgnore": {
+    "message": "Ignorar"
+  },
+  "shroudPagePrefix": {
+    "message": "Esta página es en su mayoría contenido generado por IA"
+  },
+  "shroudPageContinue": {
+    "message": "Continuar a la página"
+  },
+  "reasonPlatformLabel": {
+    "message": "Aviso de $PLATFORM$: $LABEL$",
+    "placeholders": {
+      "platform": {
+        "content": "$1"
+      },
+      "label": {
+        "content": "$2"
+      }
+    }
+  },
+  "reasonC2pa": {
+    "message": "Las Credenciales de Contenido declaran generación por IA$DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1"
+      }
+    }
+  },
+  "reasonIptc": {
+    "message": "Los metadatos de la imagen declaran generación por IA"
+  },
+  "reasonCreatorList": {
+    "message": "El autor está en una lista de contenido de IA conocido"
+  },
+  "reasonKeyword": {
+    "message": "Marcadores de IA en el texto: $HITS$",
+    "placeholders": {
+      "hits": {
+        "content": "$1"
+      }
+    }
+  },
+  "reasonUserMarked": {
+    "message": "Marcaste a este autor como contenido de IA"
+  },
+  "confidenceConfirmed": {
+    "message": "confirmado"
+  },
+  "confidenceLikely": {
+    "message": "probable"
+  },
+  "confidenceSuspected": {
+    "message": "sospechoso"
+  },
+  "mediaTypeVideo": {
+    "message": "Vídeo"
+  },
+  "mediaTypeImage": {
+    "message": "Imagen"
+  },
+  "mediaTypePost": {
+    "message": "Publicación"
+  },
+  "mediaTypeAudio": {
+    "message": "Audio"
+  },
+  "mediaTypeEmbed": {
+    "message": "Insertado"
+  },
+  "mediaTypePage": {
+    "message": "Página"
+  },
+  "popupCurrentPage": {
+    "message": "En esta página"
+  },
+  "popupEmpty": {
+    "message": "No se detectó nada aquí"
+  },
+  "popupEmptyHint": {
+    "message": "Esta página parece limpia."
+  },
+  "popupSuspectedSection": {
+    "message": "Sospechoso"
+  },
+  "popupTrackers": {
+    "message": "Rastreadores encontrados: $COUNT$",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupTrackersOff": {
+    "message": "La detección de rastreadores está desactivada"
+  },
+  "popupTrackersBlockNote": {
+    "message": "El bloqueo está activado. Las peticiones bloqueadas nunca llegan a la página, así que no se cuentan aquí."
+  },
+  "menuBlockCreator": {
+    "message": "Slop Blocker: bloquear a este autor"
+  },
+  "menuTrustCreator": {
+    "message": "Slop Blocker: confiar en este autor"
+  },
+  "popupLifetime": {
+    "message": "Bloqueado en total"
+  },
+  "popupSession": {
+    "message": "Esta sesión"
+  },
+  "popupRevealed": {
+    "message": "mostrado"
+  },
+  "popupTrustCreator": {
+    "message": "Confiar en el autor"
+  },
+  "popupOptions": {
+    "message": "Ajustes"
+  },
+  "popupDisableSite": {
+    "message": "Desactivado en este sitio"
+  },
+  "popupEnabled": {
+    "message": "Protección activada"
+  },
+  "popupDisabled": {
+    "message": "Protección desactivada"
+  },
+  "popupPaused": {
+    "message": "Vídeo pausado"
+  },
+  "popupLocaleWarning": {
+    "message": "La detección puede ser limitada para el idioma de esta página."
+  },
+  "optionsTitle": {
+    "message": "Ajustes de Slop Blocker"
+  },
+  "optionsGeneral": {
+    "message": "General"
+  },
+  "optionsEnabled": {
+    "message": "Activar Slop Blocker"
+  },
+  "optionsAutoPause": {
+    "message": "Pausar automáticamente los vídeos de IA"
+  },
+  "optionsThreshold": {
+    "message": "Bloquear cuando la detección sea"
+  },
+  "optionsThresholdConfirmed": {
+    "message": "Solo confirmada"
+  },
+  "optionsThresholdLikely": {
+    "message": "Confirmada y probable (recomendado)"
+  },
+  "optionsThresholdSuspected": {
+    "message": "Todo, incluido lo sospechoso"
+  },
+  "optionsWholePage": {
+    "message": "Bloquear páginas enteras que sean en su mayoría contenido de IA"
+  },
+  "optionsWholePageThreshold": {
+    "message": "Detecciones necesarias para bloquear una página"
+  },
+  "optionsTrackers": {
+    "message": "Rastreadores"
+  },
+  "optionsTrackerOff": {
+    "message": "Desactivado"
+  },
+  "optionsTrackerCount": {
+    "message": "Solo contar (recomendado)"
+  },
+  "optionsTrackerBlock": {
+    "message": "Contar y bloquear"
+  },
+  "optionsLists": {
+    "message": "Tus listas"
+  },
+  "optionsBlockedCreators": {
+    "message": "Autores bloqueados"
+  },
+  "optionsTrustedCreators": {
+    "message": "Autores de confianza"
+  },
+  "optionsBlockedDomains": {
+    "message": "Sitios bloqueados"
+  },
+  "optionsDisabledSites": {
+    "message": "Sitios donde Slop Blocker está desactivado"
+  },
+  "optionsAddPlaceholder": {
+    "message": "plataforma:cuenta, p. ej. youtube:@canal"
+  },
+  "optionsDomainPlaceholder": {
+    "message": "ejemplo.com"
+  },
+  "optionsAdd": {
+    "message": "Añadir"
+  },
+  "optionsRemove": {
+    "message": "Quitar"
+  },
+  "optionsEmptyList": {
+    "message": "Vacío"
+  },
+  "optionsExport": {
+    "message": "Exportar listas"
+  },
+  "optionsImport": {
+    "message": "Importar listas"
+  },
+  "optionsStats": {
+    "message": "Estadísticas"
+  },
+  "optionsResetStats": {
+    "message": "Restablecer estadísticas"
+  },
+  "optionsResetConfirm": {
+    "message": "¿Poner todos los contadores a cero?"
+  },
+  "optionsSaved": {
+    "message": "Guardado"
+  },
+  "optionsImportFailed": {
+    "message": "Error al importar: el archivo no es una exportación de listas válida."
+  },
+  "popupQuickActions": {
+    "message": "Acciones rápidas",
+    "description": "Heading of the popup section holding the block buttons for the current page"
+  },
+  "popupBlock": {
+    "message": "Bloquear $SUBJECT$",
+    "description": "Quick-action button. $SUBJECT$ is a noun phrase such as \"channel\" or \"this video\".",
+    "placeholders": {
+      "subject": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupUnblock": {
+    "message": "Desbloquear $SUBJECT$",
+    "description": "Quick-action button shown when the subject is already blocked.",
+    "placeholders": {
+      "subject": {
+        "content": "$1"
+      }
+    }
+  },
+  "subjectChannel": {
+    "message": "el canal",
+    "description": "Noun for a YouTube account, as it appears inside the Block/Unblock button"
+  },
+  "subjectAuthor": {
+    "message": "al autor",
+    "description": "Noun for an account on platforms other than YouTube"
+  },
+  "subjectVideo": {
+    "message": "este vídeo",
+    "description": "Noun phrase for a single YouTube video"
+  },
+  "subjectPost": {
+    "message": "esta publicación",
+    "description": "Noun phrase for a single post on platforms other than YouTube"
+  },
+  "reasonUserMarkedItem": {
+    "message": "Bloqueaste este vídeo",
+    "description": "Reason shown when the user blocked this specific item"
+  },
+  "optionsBlockedItems": {
+    "message": "Vídeos y publicaciones bloqueados",
+    "description": "Options page: heading of the per-item block list"
+  },
+  "optionsItemPlaceholder": {
+    "message": "plataforma:id, p. ej. youtube:dQw4w9WgXcQ",
+    "description": "Options page: input hint for the per-item block list"
+  }
+}

@@ -142,7 +142,9 @@ function shortsCandidates(root: ParentNode, ctx: PageContext): MediaCandidate[] 
       candidate.mediaUrl = `https://www.youtube.com/shorts/${videoId}`;
       candidate.itemRef = { platform: PLATFORM, id: videoId };
     }
-    const creator = creatorFrom(item);
+    // The channel bar is sometimes rendered outside the reel container, so fall
+    // back to the document rather than losing the author entirely.
+    const creator = creatorFrom(item) ?? creatorFrom(root);
     if (creator) candidate.creator = creator;
     if (label) candidate.platformLabel = { platform: PLATFORM, label };
     candidates.push(candidate);

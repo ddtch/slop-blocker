@@ -283,6 +283,12 @@ body {
   white-space: nowrap;
 }
 
+.subject-handle {
+  flex: none;
+  font-size: 12px;
+  color: var(--faint);
+}
+
 .subject-item {
   margin: 3px 0 0;
   font-size: 12px;

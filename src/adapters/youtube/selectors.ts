@@ -29,12 +29,28 @@ export const DISCLOSURE_CONTAINERS = [
 export const TITLE = ['ytd-watch-metadata h1 yt-formatted-string', 'ytd-watch-metadata h1', 'h1.title'];
 export const DESCRIPTION = ['#description-inline-expander', '#description', '#info-container'];
 
-/** Channel identity for the watch page. */
+/**
+ * Channel identity, most specific first — `creatorOf` takes the first match, so
+ * the order is the priority.
+ *
+ * The first four are the watch page's owner block. The next three are the
+ * Shorts channel bar, which shares none of that markup: on a Short the owner
+ * lives in the reel's own header, so with only the watch-page selectors the
+ * popup offered "Block this video" and no way to block the channel.
+ *
+ * The last entry is a deliberate catch-all for any link to a handle. It is last
+ * because on a watch page it would otherwise match a commenter before the
+ * uploader; by the time it is reached, the specific selectors have all missed.
+ */
 export const CHANNEL_LINK = [
   'ytd-video-owner-renderer a[href]',
   '#owner a[href]',
   'ytd-channel-name a[href]',
   '#upload-info a[href]',
+  'ytd-reel-player-header-renderer a[href]',
+  'yt-reel-channel-bar-view-model a[href]',
+  '[class*="ReelChannelBar"] a[href]',
+  'a[href^="/@"]',
 ];
 
 /** The channel name in a channel page's header, for display only. */
@@ -48,7 +64,12 @@ export const CHANNEL_PAGE_NAME = [
 /** Shorts: each reel is its own item with its own video and metadata. */
 export const SHORTS_ITEM = ['ytd-reel-video-renderer', 'ytd-shorts-player-controls'];
 export const SHORTS_LINK = ['a[href*="/shorts/"]'];
-export const SHORTS_TEXT = ['#overlay .caption', 'yt-shorts-video-title-view-model', '.reel-video-in-sequence-new'];
+export const SHORTS_TEXT = [
+  '#overlay .caption',
+  'yt-shorts-video-title-view-model',
+  '.reel-video-in-sequence-new',
+  '[class*="ShortsVideoTitle"]',
+];
 
 /** Reads the channel handle or id out of a YouTube URL path. */
 export function parseChannelHref(href: string): { handle?: string; id?: string } | null {

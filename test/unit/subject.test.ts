@@ -63,6 +63,44 @@ describe('YouTube', () => {
     expect(subject?.item?.id).toBe('xyz789');
   });
 
+  // Reported from a live Short: the popup offered "Block this video" and no way
+  // to block the channel, because the Shorts channel bar shares none of the
+  // watch page's owner markup.
+  it('finds the channel on a Short, whose owner is not in the watch-page markup', () => {
+    document.body.innerHTML = `
+      <ytd-reel-video-renderer>
+        <video></video>
+        <yt-reel-channel-bar-view-model>
+          <a href="/@albertatech">@albertatech</a>
+        </yt-reel-channel-bar-view-model>
+      </ytd-reel-video-renderer>
+    `;
+    const subject = subjectOf(youtubeAdapter, 'https://www.youtube.com/shorts/Ah_LMYqd2CE');
+    expect(subject?.creator?.handle).toBe('albertatech');
+    expect(subject?.item?.id).toBe('Ah_LMYqd2CE');
+  });
+
+  it('finds the channel on a Short through an unfamiliar wrapper', () => {
+    // The catch-all handle link, for when the channel-bar element is renamed
+    // again — which is the failure this whole selector list exists to survive.
+    document.body.innerHTML = '<div class="some-new-name"><a href="/@albertatech">Alberta Tech</a></div>';
+    expect(subjectOf(youtubeAdapter, 'https://www.youtube.com/shorts/abc')?.creator?.handle).toBe(
+      'albertatech',
+    );
+  });
+
+  // The catch-all must not outrank the owner block on a watch page, or the
+  // first commenter would become the "author" of the video.
+  it('prefers the video owner over any other handle link on a watch page', () => {
+    document.body.innerHTML = `
+      <ytd-video-owner-renderer><a href="/@therealuploader">The Real Uploader</a></ytd-video-owner-renderer>
+      <ytd-comments><a href="/@somecommenter">Some Commenter</a></ytd-comments>
+    `;
+    expect(subjectOf(youtubeAdapter, 'https://www.youtube.com/watch?v=abc')?.creator?.handle).toBe(
+      'therealuploader',
+    );
+  });
+
   // A feed is not about one thing, so offering "block this channel" there would
   // be a lie about which channel it means.
   it('returns nothing on the home feed, search and subscriptions', () => {

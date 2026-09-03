@@ -70,9 +70,10 @@ Both rules have tests (`test/unit/disclosure.test.ts`, `test/integration/youtube
 
 ## Quick actions
 
-Open the popup on a YouTube channel or video and it offers **Block channel** and **Block this
-video**, which write straight to your personal lists. The same works on TikTok, Instagram and X
-profiles and posts.
+Open the popup on a YouTube channel or video and it offers **Block @thatchannel** and **Block this
+video**, which write straight to your personal lists. The button names the account rather than
+saying "channel", so it says exactly what it will store. The same works on YouTube Shorts and on
+TikTok, Instagram and X profiles and posts.
 
 This runs off the URL and the page chrome, not off detection, so it works on a channel we have no
 signal about — which is the point. It also works on a site you switched the extension off on, since
@@ -228,6 +229,17 @@ entry rather than compressing it — `zlib.deflate` is not byte-identical across
 compressed archive would hash differently depending on who built it. The same applies to the PNG
 icons, which are written with uncompressed deflate blocks for the same reason. The result is a
 larger archive that hashes the same on any machine, which is the only property that matters here.
+
+## Languages
+
+English (default), Spanish and Russian. The UI strings live in `_locales/`, and
+`lists/disclosure-strings.json` holds the platform labels per language — those are the ones that
+matter for detection, because a disclosure is only found if we know how the platform words it in
+that language. `test/unit/locales.test.ts` fails the build if a translation loses a key or a
+placeholder.
+
+Adding a language is two files and no code. The disclosure strings are the part that needs someone
+who can confirm the wording on a real page; see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Lists
 

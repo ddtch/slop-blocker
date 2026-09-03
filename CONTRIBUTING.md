@@ -16,10 +16,15 @@ files carries a `LAST_VERIFIED` date and sits next to a `NOTES.md` explaining wh
 where the markup came from. This is deliberately shaped to be a good first contribution.
 
 **3. Disclosure strings in a language we don't speak.** `lists/disclosure-strings.json` maps
-platform → locale → the exact strings a platform renders for its AI label. We ship English and
-Russian. If you can confirm what YouTube, TikTok or Instagram renders in your language — from a real
-page, not a translation — that is a directly useful patch. Include a screenshot or the URL you saw
-it on.
+platform → locale → the exact strings a platform renders for its AI label. If you can confirm what
+YouTube, TikTok or Instagram renders in your language — **from a real page, not a translation** —
+that is a directly useful patch. Include a screenshot or the URL you saw it on, and add the entry to
+`_meta.verified` so the next reader knows which lines are evidence and which are still guesses.
+
+This is separate from the interface language. The UI ships in English, Spanish and Russian
+(`_locales/`); a new one is one file and no code, and `test/unit/locales.test.ts` will tell you if
+you missed a key or dropped a `$PLACEHOLDER$`. A translated *interface* does nothing for detection
+on its own — the disclosure strings are what find AI content.
 
 ## Running it
 
