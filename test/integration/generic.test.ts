@@ -44,7 +44,24 @@ function reported(): Detection[] {
     .flatMap((msg) => (msg.detections as Detection[]) ?? []);
 }
 
-const settle = () => new Promise((resolve) => setTimeout(resolve, 400));
+/**
+ * Waits for a condition rather than for a duration.
+ *
+ * A fixed sleep used to be 400 ms, against a report debounce of 300 ms plus an
+ * async provenance round-trip and the re-scan it triggers. That margin held on
+ * a developer's machine and vanished on a loaded CI runner, where the test
+ * failed intermittently on an empty report list. Poll instead.
+ */
+async function waitFor(condition: () => boolean, timeoutMs = 4000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (!condition()) {
+    if (Date.now() > deadline) throw new Error('timed out waiting for the engine to settle');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+}
+
+/** For asserting that nothing happens: there is no event to wait for. */
+const settle = () => new Promise((resolve) => setTimeout(resolve, 600));
 
 let engine: Engine | null = null;
 
@@ -77,7 +94,7 @@ describe('provenance on an ordinary page', () => {
     // Nothing is known on the first pass; the verdict arrives asynchronously.
     expect(document.querySelectorAll('[data-slop-blocker]')).toHaveLength(0);
 
-    await settle();
+    await waitFor(() => reported().length > 0);
     expect(document.querySelectorAll('[data-slop-blocker="block"]')).toHaveLength(1);
 
     const detection = reported().at(-1);
@@ -97,7 +114,7 @@ describe('provenance on an ordinary page', () => {
 
     engine = new Engine(makeContext({ href: PAGE_URL, hostname: 'blog.example' }), genericAdapter);
     engine.scan();
-    await settle();
+    await waitFor(() => reported().length > 0);
 
     expect(reported().at(-1)?.confidence).toBe('likely');
   });

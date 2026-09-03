@@ -68,7 +68,23 @@ function chipOverlays(): Element[] {
   return [...document.querySelectorAll('[data-slop-blocker="chip"]')];
 }
 
-const flushReports = () => new Promise((resolve) => setTimeout(resolve, 400));
+/**
+ * Waits until the engine has actually reported something.
+ *
+ * Reports are debounced by 300 ms, so a fixed 400 ms sleep left a 100 ms margin
+ * that held locally and did not on a loaded CI runner. Poll for the event
+ * instead of guessing how long it takes.
+ */
+async function waitForReports(timeoutMs = 4000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (reportedDetections().length === 0) {
+    if (Date.now() > deadline) throw new Error('timed out waiting for a detection report');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+}
+
+/** For asserting that nothing is reported: there is no event to wait for. */
+const flushReports = () => new Promise((resolve) => setTimeout(resolve, 600));
 
 let engine: Engine | null = null;
 
@@ -98,7 +114,7 @@ describe('a disclosed YouTube video', () => {
     const player = document.querySelector('#movie_player') as HTMLElement;
     expect(player.style.filter).toContain('blur');
 
-    await flushReports();
+    await waitForReports();
     const [detection] = reportedDetections();
     expect(detection?.confidence).toBe('confirmed');
     expect(detection?.source).toContain('platform-label');
@@ -175,7 +191,7 @@ describe('revealing', () => {
     expect(blockOverlays()).toHaveLength(0);
     expect(pause).not.toHaveBeenCalled();
 
-    await flushReports();
+    await waitForReports();
     expect(reportedDetections().some((detection) => detection.revealed)).toBe(true);
   });
 });
@@ -193,7 +209,7 @@ describe('false positives', () => {
     expect(blockOverlays()).toHaveLength(0);
     expect(chipOverlays()).toHaveLength(1);
 
-    await flushReports();
+    await waitForReports();
     const [detection] = reportedDetections();
     expect(detection?.confidence).toBe('suspected');
     expect(detection?.blocked).toBe(false);
@@ -242,7 +258,7 @@ describe('user lists', () => {
 
     expect(blockOverlays()).toHaveLength(1);
 
-    await flushReports();
+    await waitForReports();
     expect(reportedDetections()[0]?.source).toContain('user-marked');
   });
 
@@ -258,7 +274,7 @@ describe('user lists', () => {
     expect(blockOverlays()).toHaveLength(1);
     expect(pause).toHaveBeenCalled();
 
-    await flushReports();
+    await waitForReports();
     expect(reportedDetections()[0]?.confidence).toBe('confirmed');
   });
 
