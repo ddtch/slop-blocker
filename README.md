@@ -205,8 +205,11 @@ npm ci && npm run pack     # prints the SHA-256 of slop-blocker-<version>.zip
 ```
 
 The hash must match the one in that release's notes. `scripts/pack.mjs` sorts entries by path, fixes
-every timestamp to the epoch the zip format starts at, and zeroes the file modes, so the same commit
-produces the same bytes on any machine.
+every timestamp to the epoch the zip format starts at, zeroes the file modes, and *stores* every
+entry rather than compressing it — `zlib.deflate` is not byte-identical across zlib versions, so a
+compressed archive would hash differently depending on who built it. The same applies to the PNG
+icons, which are written with uncompressed deflate blocks for the same reason. The result is a
+larger archive that hashes the same on any machine, which is the only property that matters here.
 
 ## Lists
 

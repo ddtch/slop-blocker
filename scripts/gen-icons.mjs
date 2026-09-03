@@ -14,7 +14,6 @@
 // PNGs are written by hand: raw RGBA scanlines, zlib-deflated, wrapped in the
 // three mandatory chunks (IHDR / IDAT / IEND) with CRC32 per chunk.
 
-import { deflateSync } from 'node:zlib';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -41,6 +40,47 @@ function crc32(buf) {
   return (c ^ 0xffffffff) >>> 0;
 }
 
+/**
+ * A zlib stream of uncompressed ("stored") deflate blocks.
+ *
+ * Not `zlib.deflateSync`, deliberately. Its output is not byte-identical across
+ * zlib versions — Node builds differ, and some link zlib-ng — so a compressed
+ * icon changes bytes depending on who ran `npm run icons`. That breaks the
+ * committed-icon check in CI, and worse, it breaks the reproducible package
+ * hash in `scripts/pack.mjs`, since these files end up inside it. Stored blocks
+ * are defined by the format rather than by an implementation's choices, so this
+ * produces the same bytes everywhere. The icons grow to their raw size, which
+ * for four small squares is worth the guarantee.
+ */
+function zlibStored(data) {
+  const MAX_BLOCK = 0xffff;
+  const parts = [Buffer.from([0x78, 0x01])]; // CMF/FLG for deflate, 32K window
+
+  for (let offset = 0; offset < data.length || offset === 0; offset += MAX_BLOCK) {
+    const slice = data.subarray(offset, offset + MAX_BLOCK);
+    const final = offset + MAX_BLOCK >= data.length ? 1 : 0;
+    const header = Buffer.alloc(5);
+    header[0] = final; // BFINAL, BTYPE=00 (stored)
+    header.writeUInt16LE(slice.length, 1);
+    header.writeUInt16LE(~slice.length & 0xffff, 3);
+    parts.push(header, Buffer.from(slice));
+    if (final) break;
+  }
+
+  // Adler-32 of the uncompressed data, as the zlib trailer.
+  let a = 1;
+  let b = 0;
+  for (const byte of data) {
+    a = (a + byte) % 65521;
+    b = (b + a) % 65521;
+  }
+  const trailer = Buffer.alloc(4);
+  trailer.writeUInt32BE(((b << 16) | a) >>> 0, 0);
+  parts.push(trailer);
+
+  return Buffer.concat(parts);
+}
+
 function chunk(type, data) {
   const length = Buffer.alloc(4);
   length.writeUInt32BE(data.length, 0);
@@ -59,7 +99,7 @@ function png(size, pixels) {
   return Buffer.concat([
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
     chunk('IHDR', ihdr),
-    chunk('IDAT', deflateSync(pixels, { level: 9 })),
+    chunk('IDAT', zlibStored(pixels)),
     chunk('IEND', Buffer.alloc(0)),
   ]);
 }

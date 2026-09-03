@@ -7,8 +7,13 @@
 // store. Publishing a hash that anyone can reproduce from a tagged commit turns
 // those claims into something a reader can check.
 //
-// Reproducible here means: entries sorted by path, a fixed timestamp, fixed
-// deflate settings, and no OS or filesystem metadata. Same commit in, same
+// Reproducible here means: entries sorted by path, a fixed timestamp, no OS or
+// filesystem metadata, and every entry *stored* rather than deflated. That last
+// one is the load-bearing choice: `zlib.deflate` is not byte-identical across
+// zlib versions (Node builds differ, and some link zlib-ng), so a compressed
+// archive would hash differently depending on who built it — which is exactly
+// the guarantee this script exists to provide. Storing costs a few dozen KB in
+// an archive the store recompresses on its own anyway. Same commit in, same
 // bytes out, on any machine.
 //
 // Written by hand because Node has no zip writer and this is not worth a
@@ -18,7 +23,6 @@
 
 import { createHash } from 'node:crypto';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
-import { deflateRawSync } from 'node:zlib';
 import path, { join, relative } from 'node:path';
 
 const ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -116,15 +120,11 @@ async function main() {
 
   for (const name of paths) {
     const contents = await readFile(join(DIST, name.split('/').join(path.sep)));
-    const deflated = deflateRawSync(contents, { level: 9 });
-    // Store the file whole when compressing it makes it bigger, which happens
-    // with the already-compressed PNGs.
-    const stored = deflated.length >= contents.length;
 
     const entry = {
       name: Buffer.from(name, 'utf8'),
-      method: stored ? 0 : 8,
-      compressed: stored ? contents : deflated,
+      method: 0, // stored; see the note at the top
+      compressed: contents,
       size: contents.length,
       crc: crc32(contents),
       offset,

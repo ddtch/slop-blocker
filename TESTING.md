@@ -167,5 +167,14 @@ Two things worth knowing if the popup capture looks wrong:
   scroll container and the sticky footer falls outside the card.
 
 `npm run pack` writes the store zip deterministically — entries sorted by path, all timestamps fixed,
-file modes zeroed — so the same commit produces the same bytes and the same hash on any machine.
-That hash goes in the release notes. Verify with `npm ci && npm run pack` on a clean checkout.
+file modes zeroed, every entry stored rather than deflated — so the same commit produces the same
+bytes and the same hash on any machine. That hash goes in the release notes. Verify with
+`npm ci && npm run pack` on a clean checkout.
+
+Storing rather than compressing is not an optimisation oversight. `zlib.deflate` is not
+byte-identical across zlib versions: Node builds differ and some link zlib-ng. CI caught this the
+first time it ran, on the icons — `npm run icons` produced different bytes on Node 25 locally and
+Node 22 on the runner, from identical pixels. `scripts/gen-icons.mjs` therefore writes its PNGs with
+hand-built stored deflate blocks, and `scripts/pack.mjs` stores every zip entry. If you ever
+reintroduce compression to either, the reproducible-hash claim in `README.md` and `PRIVACY.md`
+stops being true.
