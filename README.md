@@ -325,6 +325,7 @@ have. Selector fixes and disclosure strings for languages we do not speak are th
 among them that `lists/creators.json` stays empty and that we publish no accuracy percentage.
 
 Security issues: [`SECURITY.md`](SECURITY.md). Report privately.
+Conduct: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 
 ## Licence
 
