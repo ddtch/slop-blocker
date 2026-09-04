@@ -5,49 +5,94 @@ news to anyone who read `PRIVACY.md`; this is the same information in the shape 
 
 ## Single purpose
 
-> Detect content that is disclosed or labelled as AI-generated, and hide it behind a warning the user
-> can click through.
+Paste into **Single purpose description**:
 
-Everything in the extension serves that purpose. The tracker counter is the one feature that needs
-justifying on its own — see below.
+> Slop Blocker hides content that is disclosed or labelled as AI-generated behind a warning the user
+> can click through.
+>
+> It does not guess from pixels. It reads the AI disclosures the platforms already publish —
+> YouTube's "altered or synthetic content" label, TikTok's AI-generated badge, Instagram's "AI info"
+> tag — together with the C2PA Content Credentials and IPTC/XMP metadata that generators embed in
+> the media files themselves. On YouTube it pauses a labelled video before it plays.
+>
+> Every other part of the extension serves that one purpose: the popup lists what was hidden on the
+> current page and which signal caused it, the options page sets the confidence threshold, and the
+> personal lists let the user block or trust individual authors and videos.
 
 ## Permission justifications
 
-**`storage`** — Stores the user's settings, their personal block/trust lists, and blocked-item
-counters. Local only; nothing syncs.
+One box per permission in the submission form. Each is written to answer the reviewer's actual
+question: what does this do for the user, and why can the single purpose not be met without it.
 
-**`tabs`** — Used to associate detections with the tab that produced them, so the popup and the
-toolbar badge show the current page's results, and to clear a tab's state when it navigates or
-closes. The extension does not enumerate or record browsing history.
+**`storage`**
 
-**`contextMenus`** — Adds two right-click items, "block this author" and "trust this author", which
-are the primary way users build their own lists.
+> Stores locally, in the browser, only what the user creates by using the extension: their settings
+> (protection on/off, the confidence threshold at which content is hidden, automatic pausing of
+> labelled videos, tracker mode, and the sites they have switched the extension off on), their
+> personal block and trust lists of authors and videos, and counters of how many items have been
+> hidden. The counters are plain numbers — no URLs, titles or timestamps are kept. Per-tab detection
+> results are held in session storage so the popup and the toolbar badge can show the current page's
+> results, and are discarded when the tab closes. Nothing is synced and nothing is transmitted; the
+> extension has no server.
 
-**`declarativeNetRequest`** — Optional tracker blocking, off by default. Rules are built from a
-bundled list of hostnames and installed as dynamic rules; enforcement is entirely inside the browser.
-The extension deliberately does **not** request `declarativeNetRequestFeedback`, so it cannot observe
-matched requests.
+**`tabs`**
 
-**Host permission `<all_urls>`** — Two reasons:
+> Used to attribute detections to the tab that produced them, so the popup and the toolbar badge show
+> results for the page the user is looking at, and to discard a tab's results when it navigates away
+> or closes. Concretely: reading the id and hostname of the active tab so the popup can show that
+> tab's results and offer "turn off on this site"; clearing stored state on tabs.onUpdated and
+> tabs.onRemoved; and messaging already-open tabs when the user changes a setting, so the change
+> takes effect without reloading. Browsing history is never read, recorded or transmitted.
 
-1. AI-generated content appears on every kind of site, so the detector has to be able to run
-   anywhere. A fixed site list would silently miss exactly the pages users care about.
-2. Reading a file's C2PA / IPTC metadata is a cross-origin read of media the page already loaded.
-   That has to happen in the service worker, which needs host access to read the response bytes.
+**`contextMenus`**
 
-Mitigations a reviewer may want to hear: the user can disable the extension globally or per site from
-the popup; scanning is limited to media near the viewport; metadata reads request only the first
-256 KB and are sent without credentials; and there is no remote endpoint of any kind.
+> Adds exactly two right-click items, "Slop Blocker: block this author" and "Slop Blocker: trust this
+> author". They are one of the two ways a user builds their own lists — the other is a button in the
+> popup — and each acts only on the element the user right-clicked. No other menu items are created.
 
-**If broad host access is a blocker for the listing**, the fallback is to ship with an explicit host
-list for the supported platforms plus `optional_host_permissions` for everything else, gated behind an
-"enable everywhere" toggle. That is a manifest-and-onboarding change, not an architectural one.
+**`declarativeNetRequest`**
+
+> Optional tracker blocking. It is off by default and becomes active only if the user selects "Count
+> and block" in the options page. When enabled, the extension registers dynamic rules built from a
+> list of analytics and ad-tech hostnames bundled inside the package; the browser enforces them. The
+> list is never fetched or updated remotely. The extension deliberately does not request
+> declarativeNetRequestFeedback, so it cannot observe which requests matched.
+
+**Host permission (`<all_urls>`)**
+
+> Two things require it, both part of the single purpose.
+>
+> 1. Content that is labelled as AI-generated appears on every kind of website, so the content script
+> has to be able to run anywhere in order to find the platform's label or the file's metadata. A
+> fixed list of sites would silently miss the pages users care about.
+>
+> 2. Deciding whether an image is AI-generated means reading that image's C2PA Content Credentials or
+> IPTC/XMP metadata. The image is served by a third-party host, so this is a cross-origin read and it
+> has to happen in the service worker, which needs host access to read the response bytes.
+>
+> Limits already in place: only media near the viewport is examined; a metadata read requests just
+> the first 256 KB of the file and is sent with credentials omitted, so no cookies are attached;
+> verdicts are cached so a file is read once; and the user can switch the extension off per site or
+> globally from the popup. The only requests the extension makes are to the host already serving the
+> media on the page being viewed. There is no server belonging to this extension.
 
 ## Remote code
 
-None. There is no `eval`, no remotely hosted script, no WASM, and no remote configuration. All
-detection lists are bundled JSON in the package. The remote-list-update setting described in
-`SPEC.md` is not implemented and is forced to `false` in `getSettings()`.
+Answer **"No, I am not using remote code."**
+
+Verified against the built package, not from memory: it contains no `eval`, no `new Function`, no
+`importScripts`, no WebAssembly, and no `<script>` pointing at an external file. The only URLs that
+appear anywhere in `dist/` are the SVG namespace string and `youtube.com`, both used for parsing and
+building URLs rather than loading anything. There are exactly two `fetch` calls in the source: one
+reads a JSON list bundled inside the package via `chrome.runtime.getURL`, and one reads the bytes of
+media already displayed on the page being viewed.
+
+Re-check before each submission:
+
+```bash
+npm run build
+grep -nE "\beval\(|new Function\(|importScripts\(|WebAssembly|<script[^>]+src=\"http" dist/*.js dist/*.html
+```
 
 ## Data handling disclosures
 
