@@ -17,8 +17,11 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
+const ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), '..');
 const SIZES = [16, 32, 48, 128];
-const OUT_DIR = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'icons');
+const OUT_DIR = path.join(ROOT, 'icons');
+/** The landing page uses the same mark, so it is drawn by the same code. */
+const SITE_DIR = path.join(ROOT, 'docs');
 
 const BG = [11, 11, 15];
 /** The mark: one colour, so the shape does the work at every size. */
@@ -119,9 +122,17 @@ function blend(base, over, alpha) {
   return base.map((channel, i) => Math.round(channel * (1 - alpha) + over[i] * alpha));
 }
 
-function render(size) {
+/**
+ * @param {number} size
+ * @param {{ bleed?: boolean }} [options] `bleed` fills the whole square with an
+ *   opaque background and no rounded corners. iOS applies its own mask to a
+ *   home-screen icon, so transparency outside our corners renders as black
+ *   fringing and our rounding gets clipped a second time.
+ */
+function render(size, options = {}) {
+  const bleed = options.bleed === true;
   const center = size / 2;
-  const cornerRadius = size * 0.22;
+  const cornerRadius = bleed ? 0 : size * 0.22;
 
   // Sparkle: an astroid, |x|^p + |y|^p <= r^p. p below 1 pulls the edges
   // inward, which is what turns a diamond into a four-point star; 0.72 is
@@ -132,7 +143,7 @@ function render(size) {
   // strike and keep the sparkle's silhouette, which is the part that
   // identifies us; the large ones carry the full struck-through mark.
   const small = size <= 32;
-  const sparkleRadius = size * (small ? 0.44 : 0.38);
+  const sparkleRadius = size * (small ? 0.44 : bleed ? 0.32 : 0.38);
   const sparkleExponent = small ? 0.7 : 0.76;
   // The strike is a knockout back to the background rather than a third
   // colour: two colours is all a toolbar icon needs, and cutting the sparkle
@@ -140,6 +151,7 @@ function render(size) {
   const cutHalfWidth = small ? 0 : size * 0.055;
 
   const insideCard = (x, y) => {
+    if (bleed) return true;
     const dx = Math.max(cornerRadius - x, x - (size - cornerRadius), 0);
     const dy = Math.max(cornerRadius - y, y - (size - cornerRadius), 0);
     return dx * dx + dy * dy <= cornerRadius * cornerRadius;
@@ -173,9 +185,58 @@ function render(size) {
   return png(size, pixels);
 }
 
-await mkdir(OUT_DIR, { recursive: true });
-for (const size of SIZES) {
-  const file = path.join(OUT_DIR, `icon-${size}.png`);
-  await writeFile(file, render(size));
+/**
+ * Packs PNGs into an .ico. Browsers still request /favicon.ico implicitly even
+ * when the page declares better icons, and a 404 on every page load is noise
+ * in someone's console and in our logs.
+ *
+ * The format allows a PNG payload verbatim, so this is a directory and the
+ * files, with no re-encoding.
+ */
+function ico(images) {
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0); // reserved
+  header.writeUInt16LE(1, 2); // type: icon
+  header.writeUInt16LE(images.length, 4);
+
+  let offset = 6 + images.length * 16;
+  const entries = [];
+  for (const { size, data } of images) {
+    const entry = Buffer.alloc(16);
+    entry[0] = size >= 256 ? 0 : size; // 0 means 256
+    entry[1] = size >= 256 ? 0 : size;
+    entry[2] = 0; // palette size
+    entry[3] = 0; // reserved
+    entry.writeUInt16LE(1, 4); // colour planes
+    entry.writeUInt16LE(32, 6); // bits per pixel
+    entry.writeUInt32LE(data.length, 8);
+    entry.writeUInt32LE(offset, 12);
+    entries.push(entry);
+    offset += data.length;
+  }
+
+  return Buffer.concat([header, ...entries, ...images.map((image) => image.data)]);
+}
+
+async function write(file, data) {
+  await writeFile(file, data);
   console.log(`[icons] wrote ${path.relative(process.cwd(), file)}`);
 }
+
+await mkdir(OUT_DIR, { recursive: true });
+for (const size of SIZES) {
+  await write(path.join(OUT_DIR, `icon-${size}.png`), render(size));
+}
+
+// The site's icons. Same mark, same generator, so they cannot drift from the
+// one in the toolbar.
+await mkdir(SITE_DIR, { recursive: true });
+const favicon16 = render(16);
+const favicon32 = render(32);
+await write(path.join(SITE_DIR, 'favicon-16.png'), favicon16);
+await write(path.join(SITE_DIR, 'favicon-32.png'), favicon32);
+await write(path.join(SITE_DIR, 'favicon.ico'), ico([
+  { size: 16, data: favicon16 },
+  { size: 32, data: favicon32 },
+]));
+await write(path.join(SITE_DIR, 'apple-touch-icon.png'), render(180, { bleed: true }));

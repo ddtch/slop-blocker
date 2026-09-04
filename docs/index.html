@@ -18,16 +18,44 @@
     />
     <meta property="og:url" content="https://slopblocker.nnnada.com/" />
     <meta property="og:image" content="https://slopblocker.nnnada.com/screenshots/01-blocked-page.png" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="800" />
+    <meta
+      property="og:image:alt"
+      content="Four image cards covered by a warning naming the signal that fired, one clean photograph untouched, and an essay about AI marked only as possibly AI content."
+    />
+    <meta property="og:site_name" content="Slop Blocker" />
+    <meta property="og:locale" content="en" />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <!-- The mark, drawn rather than fetched: this page makes no third-party
-         requests, which is the same promise the extension itself makes. -->
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0b0f'/%3E%3Cpath d='M50 8C53 34 66 47 92 50C66 53 53 66 50 92C47 66 34 53 8 50C34 47 47 34 50 8Z' fill='%23ff3b30'/%3E%3C/svg%3E"
-    />
+    <!-- SVG first for browsers that take it, PNG for those that do not, and a
+         real favicon.ico because browsers request that path whatever the page
+         declares. All four are drawn by scripts/gen-icons.mjs, the same code
+         that draws the extension's toolbar icon. -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0b0f'/%3E%3Cpath d='M50 8C53 34 66 47 92 50C66 53 53 66 50 92C47 66 34 53 8 50C34 47 47 34 50 8Z' fill='%23ff3b30'/%3E%3C/svg%3E" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/favicon-16.png" sizes="16x16" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="alternate icon" href="/favicon.ico" sizes="32x32" />
+    <meta name="theme-color" content="#0b0b0f" />
 
     <link rel="stylesheet" href="style.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Slop Blocker",
+        "applicationCategory": "BrowserApplication",
+        "operatingSystem": "Chrome 120+",
+        "url": "https://slopblocker.nnnada.com/",
+        "description": "A browser extension that hides AI-generated content behind a click-to-reveal warning, using platform disclosure labels, C2PA Content Credentials and IPTC/XMP metadata rather than pixel-level guessing.",
+        "license": "https://github.com/ddtch/slop-blocker/blob/main/LICENSE",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "codeRepository": "https://github.com/ddtch/slop-blocker",
+        "privacyPolicy": "https://slopblocker.nnnada.com/privacy/"
+      }
+    </script>
   </head>
 
   <body>

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Not found — Slop Blocker</title>
+    <meta name="description" content="That page does not exist on this site." />
+    <!-- A missing page is not a page. Keeping it out of the index costs nothing
+         and stops it being served as a search result for the real ones. -->
+    <meta name="robots" content="noindex, follow" />
+
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0b0f'/%3E%3Cpath d='M50 8C53 34 66 47 92 50C66 53 53 66 50 92C47 66 34 53 8 50C34 47 47 34 50 8Z' fill='%23ff3b30'/%3E%3C/svg%3E"
+      type="image/svg+xml"
+    />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="alternate icon" href="/favicon.ico" sizes="32x32" />
+    <meta name="theme-color" content="#0b0b0f" />
+
+    <link rel="stylesheet" href="/style.css" />
+    <style>
+      .notfound {
+        min-height: 62vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 60px 0;
+      }
+      .notfound .code {
+        font-size: 13px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 12px;
+      }
+      .notfound h1 {
+        margin: 0 0 14px;
+        font-size: clamp(30px, 5vw, 44px);
+        letter-spacing: -0.02em;
+      }
+    </style>
+  </head>
+
+  <body>
+    <nav class="nav">
+      <div class="wrap nav-inner">
+        <a class="brand" href="/">
+          <svg width="22" height="22" viewBox="0 0 100 100" aria-hidden="true">
+            <rect width="100" height="100" rx="22" fill="#0b0b0f" />
+            <path
+              d="M50 8C53 34 66 47 92 50C66 53 53 66 50 92C47 66 34 53 8 50C34 47 47 34 50 8Z"
+              fill="#ff3b30"
+            />
+            <line x1="18" y1="82" x2="82" y2="18" stroke="#0b0b0f" stroke-width="9" />
+          </svg>
+          Slop Blocker
+        </a>
+        <div class="nav-links">
+          <a class="hide-sm" href="/#how">How it works</a>
+          <a class="hide-sm" href="/privacy/">Privacy</a>
+          <a href="https://github.com/ddtch/slop-blocker">GitHub</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="wrap notfound">
+      <p class="code">404</p>
+      <h1>Nothing here.</h1>
+      <p>
+        This page does not exist — which, on a site about hiding things, is at least on brand. The
+        parts that do exist:
+      </p>
+      <div class="cta">
+        <a class="btn btn--primary" href="/">The extension</a>
+        <a class="btn btn--ghost" href="/privacy/">Privacy policy</a>
+        <a class="btn btn--ghost" href="https://github.com/ddtch/slop-blocker">GitHub</a>
+      </div>
+    </main>
+
+    <footer>
+      <div class="wrap foot-inner">
+        <span>MIT licensed. No analytics on this page either.</span>
+        <span class="foot-links">
+          <a href="https://github.com/ddtch/slop-blocker">GitHub</a>
+          <a href="/privacy/">Privacy policy</a>
+          <a href="https://github.com/ddtch/slop-blocker/issues">Issues</a>
+        </span>
+      </div>
+    </footer>
+  </body>
+</html>

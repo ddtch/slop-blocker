@@ -216,9 +216,18 @@ function page({ title, updated, body }) {
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
     <meta property="og:url" content="${SITE}/privacy/" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="${SITE}/screenshots/01-blocked-page.png" />
+    <meta property="og:site_name" content="Slop Blocker" />
+    <meta property="og:locale" content="en" />
+    <meta name="twitter:card" content="summary_large_image" />
 
-    <link rel="icon" href="${MARK}" />
+    <!-- Same set as the landing page; all four come from scripts/gen-icons.mjs. -->
+    <link rel="icon" href="${MARK}" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/favicon-16.png" sizes="16x16" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="alternate icon" href="/favicon.ico" sizes="32x32" />
+    <meta name="theme-color" content="#0b0b0f" />
     <link rel="stylesheet" href="../style.css" />
   </head>
 

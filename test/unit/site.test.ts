@@ -6,7 +6,7 @@
 // anywhere — it just quietly stops being found, or gets indexed under two
 // names. So the three sources are compared against each other here.
 
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -31,6 +31,12 @@ function pageUrls(): string[] {
 }
 
 const read = (path: string) => readFileSync(join(DOCS, path), 'utf8');
+/**
+ * The same file with runs of whitespace collapsed. Attributes are wrapped
+ * across lines by the formatter, so a regex over the raw text finds a tag on
+ * one page and misses the identical tag on another.
+ */
+const flat = (path: string) => read(path).replace(/\s+/g, ' ');
 const sitemap = read('sitemap.xml');
 const robots = read('robots.txt');
 
@@ -60,6 +66,96 @@ describe('sitemap', () => {
       const canonical = /<link rel="canonical" href="([^"]+)"/.exec(html)?.[1];
       expect(canonical, `canonical of /${path}`).toBe(url);
     }
+  });
+});
+
+describe('head of every page', () => {
+  // 404.html is a page too, and gets the same treatment; it just must not be
+  // in the sitemap.
+  const pages = ['index.html', 'privacy/index.html', '404.html'];
+
+  it.each(pages)('%s has a title and a description', (page) => {
+    const html = flat(page);
+    const title = /<title>([^<]+)<\/title>/.exec(html)?.[1];
+    expect(title, 'title').toBeTruthy();
+    expect(title!.length).toBeLessThan(70);
+
+    const description = /<meta name="description" content="([^"]+)"/.exec(html)?.[1];
+    expect(description, 'description').toBeTruthy();
+  });
+
+  it.each(pages)('%s declares a language and a viewport', (page) => {
+    const html = read(page);
+    expect(html).toContain('<html lang="en">');
+    expect(html).toContain('name="viewport"');
+    expect(html).toContain('<meta charset="utf-8" />');
+  });
+
+  /*
+   * A favicon link naming a file that is not there is worse than no link: the
+   * browser asks, gets a 404, and falls back to nothing. So the assertion is
+   * that every icon the markup promises actually exists on disk.
+   */
+  it.each(pages)('%s only references icons that exist', (page) => {
+    const html = flat(page);
+    const hrefs = [...html.matchAll(/<link rel="[^"]*icon[^"]*" href="([^"]+)"/g)].map((m) => m[1]!);
+    const files = hrefs.filter((href) => !href.startsWith('data:'));
+
+    expect(files.length, 'PNG/ICO icons declared').toBeGreaterThanOrEqual(2);
+    for (const href of files) {
+      expect(href.startsWith('/'), `${href} must be site-absolute`).toBe(true);
+      expect(existsSync(join(DOCS, href.slice(1))), `${href} exists`).toBe(true);
+    }
+  });
+
+  it.each(pages)('%s sets a theme colour', (page) => {
+    expect(read(page)).toContain('name="theme-color"');
+  });
+
+  it('keeps the 404 page out of the index and out of the sitemap', () => {
+    expect(read('404.html')).toContain('content="noindex, follow"');
+    expect(sitemapUrls.some((url) => url.includes('404'))).toBe(false);
+  });
+});
+
+describe('social previews', () => {
+  const pages = ['index.html', 'privacy/index.html'];
+
+  it.each(pages)('%s has the Open Graph tags a preview needs', (page) => {
+    const html = flat(page);
+    for (const property of ['og:type', 'og:title', 'og:description', 'og:url', 'og:image']) {
+      expect(html, property).toContain(`property="${property}"`);
+    }
+    expect(html).toContain('name="twitter:card"');
+  });
+
+  it.each(pages)('%s points og:image at an image that exists', (page) => {
+    const html = flat(page);
+    const url = /<meta property="og:image" content="([^"]+)"/.exec(html)?.[1] ?? '';
+    expect(url.startsWith(`${SITE}/`), 'og:image must be absolute').toBe(true);
+    expect(existsSync(join(DOCS, url.slice(SITE.length + 1))), url).toBe(true);
+  });
+
+  it('declares the image size, so the preview does not reflow', () => {
+    const html = flat('index.html');
+    expect(html).toContain('property="og:image:width" content="1280"');
+    expect(html).toContain('property="og:image:height" content="800"');
+    expect(html).toContain('property="og:image:alt"');
+  });
+
+  it('describes the extension as structured data a crawler can read', () => {
+    const html = read('index.html');
+    const json = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(html)?.[1];
+    expect(json, 'ld+json block').toBeTruthy();
+
+    const data = JSON.parse(json!);
+    expect(data['@type']).toBe('SoftwareApplication');
+    expect(data.url).toBe(`${SITE}/`);
+    expect(data.privacyPolicy).toBe(`${SITE}/privacy/`);
+    // The page says the extension is free and MIT; the structured data must not
+    // say something else to a machine.
+    expect(data.isAccessibleForFree).toBe(true);
+    expect(data.offers.price).toBe('0');
   });
 });
 
