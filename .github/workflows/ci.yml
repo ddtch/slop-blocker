@@ -19,5 +19,8 @@ jobs:
       - run: npm run check
       # The icons are committed; this fails if they drift from the generator.
       - run: npm run icons && git diff --exit-code -- icons/
+      # The published privacy policy is generated from PRIVACY.md. If the two
+      # disagree, the one people actually read is the wrong one.
+      - run: npm run privacy && git diff --exit-code -- docs/privacy/
       # Packages dist/ deterministically and prints the hash the release should carry.
       - run: npm run pack

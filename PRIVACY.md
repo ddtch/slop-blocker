@@ -2,6 +2,8 @@
 
 _Last updated: 2026-09-03_
 
+_Published at <https://slopblocker.nnnada.com/privacy/>, and generated from this file, so the two cannot disagree._
+
 ## The short version
 
 Slop Blocker does all of its work on your own computer. It has no server, no account, no analytics

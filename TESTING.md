@@ -20,6 +20,7 @@ What the suite covers:
 | `test/integration/youtube.test.ts` | Disclosed video → covered, paused, reported; one auto-resume undone; reveal is permanent; trusted authors exempt; the off switches |
 | `test/unit/badge-adapter.test.ts` | The fallback for renamed containers, and that it neither doubles up nor reads captions as labels |
 | `test/unit/observer.test.ts` | When a rescan happens, and that a `pushState` navigation is noticed at all |
+| `test/unit/privacy-page.test.ts` | The Markdown converter behind the published privacy policy, including that it refuses what it cannot render |
 | `test/unit/locales.test.ts` | Every locale covers every key and keeps every placeholder |
 | `test/unit/items.test.ts` | Per-item refs: exact (case-sensitive) id matching, round-tripping the options-page format |
 | `test/unit/subject.test.ts` | What the popup's quick actions act on, per platform, including that a feed yields nothing |
@@ -171,6 +172,10 @@ Two things worth knowing if the popup capture looks wrong:
 - `body` in `popup.css` sets `overflow-y: auto`, which CSS *propagates to the viewport* unless the
   root element has its own `overflow`. Without setting `overflow` on `<html>`, the body is not a
   scroll container and the sticky footer falls outside the card.
+
+`npm run privacy` regenerates `docs/privacy/index.html` from `PRIVACY.md`. CI runs it and fails on a
+diff, so the published policy and the one in the repository cannot drift apart — edit the Markdown,
+never the HTML.
 
 `npm run landing` screenshots `docs/index.html` — the GitHub Pages landing page — at desktop and
 phone widths and reports any image that failed to load. It is a look-at-it check, not an assertion:

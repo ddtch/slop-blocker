@@ -20,6 +20,7 @@
     "fixtures": "node scripts/gen-fixtures.mjs",
     "shots": "npm run build && node scripts/screenshots.mjs",
     "landing": "node scripts/landing-shot.mjs",
+    "privacy": "node scripts/build-privacy.mjs",
     "pack": "npm run build && node scripts/pack.mjs",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.tools.json",
     "test": "vitest run",
