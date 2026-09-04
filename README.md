@@ -10,6 +10,9 @@ scheduled for M2. See [What is not done yet](#what-is-not-done-yet).
 [![CI](https://github.com/ddtch/slop-blocker/actions/workflows/ci.yml/badge.svg)](https://github.com/ddtch/slop-blocker/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+**[ddtch.github.io/slop-blocker](https://ddtch.github.io/slop-blocker/)** — the landing page, built
+from `docs/index.html` in this repository.
+
 ![The overlay on a page: four items covered with the signal that fired, one clean photo untouched,
 and an essay about AI marked "possibly AI content" rather than blocked](docs/screenshots/01-blocked-page.png)
 
