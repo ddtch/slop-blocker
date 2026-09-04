@@ -1,0 +1,18 @@
+# https://slopblocker.nnnada.com/robots.txt
+
+User-agent: *
+Allow: /
+
+# GitHub Pages serves everything in docs/, which includes repository documents
+# that happen to live beside the site. They are Markdown, not pages: indexing
+# them would produce plain-text duplicates competing with the canonical copies
+# on GitHub. They stay reachable, they just do not belong in search results.
+Disallow: /competitive-analysis.md
+Disallow: /roadmap.md
+Disallow: /store-review.md
+Disallow: /CNAME
+
+# The screenshots are deliberately not disallowed: they are the og:image, and
+# link previews fetch them.
+
+Sitemap: https://slopblocker.nnnada.com/sitemap.xml

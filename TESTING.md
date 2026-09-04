@@ -20,6 +20,7 @@ What the suite covers:
 | `test/integration/youtube.test.ts` | Disclosed video → covered, paused, reported; one auto-resume undone; reveal is permanent; trusted authors exempt; the off switches |
 | `test/unit/badge-adapter.test.ts` | The fallback for renamed containers, and that it neither doubles up nor reads captions as labels |
 | `test/unit/observer.test.ts` | When a rescan happens, and that a `pushState` navigation is noticed at all |
+| `test/unit/site.test.ts` | That the sitemap, the pages that exist, and their canonical tags all agree, and that robots.txt keeps the repository's Markdown out of search |
 | `test/unit/privacy-page.test.ts` | The Markdown converter behind the published privacy policy, including that it refuses what it cannot render |
 | `test/unit/locales.test.ts` | Every locale covers every key and keeps every placeholder |
 | `test/unit/items.test.ts` | Per-item refs: exact (case-sensitive) id matching, round-tripping the options-page format |

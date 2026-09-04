@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Every page on the site, and nothing else.
+
+  Deliberately no <lastmod>: a hand-written date is wrong the moment a page
+  changes, and generating one from git would make the file differ from its
+  own generator on the very commit that edits a page. An absent lastmod is
+  valid and can never be stale; test/unit/site.test.ts keeps the list itself
+  honest instead.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://slopblocker.nnnada.com/</loc>
+  </url>
+  <url>
+    <loc>https://slopblocker.nnnada.com/privacy/</loc>
+  </url>
+</urlset>
