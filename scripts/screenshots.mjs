@@ -174,11 +174,11 @@ async function attach(debugPort, predicate, attempts = 40) {
   throw new Error('target never appeared');
 }
 
-async function capture(cdp, file, { prepare } = {}) {
+async function capture(cdp, file, { prepare, width = WIDTH, height = HEIGHT } = {}) {
   await cdp.send('Runtime.enable');
   await cdp.send('Emulation.setDeviceMetricsOverride', {
-    width: WIDTH,
-    height: HEIGHT,
+    width,
+    height,
     deviceScaleFactor: 1,
     mobile: false,
   });
@@ -273,6 +273,12 @@ async function main() {
       (target) => target.type === 'page' && target.url.includes('popup.html'),
     );
     await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // The popup at its own size first, for the landing page: shrunk into half a
+    // column, the 1280-wide framed version is unreadable, and a screenshot
+    // nobody can read is decoration.
+    await capture(popup.cdp, '04-popup-card.png', { width: 360, height: 560 });
+
     await capture(popup.cdp, '02-popup.png', { prepare: CENTRE_ON_BACKDROP });
 
     // 3. The options page.

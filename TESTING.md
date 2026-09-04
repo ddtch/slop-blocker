@@ -172,6 +172,10 @@ Two things worth knowing if the popup capture looks wrong:
   root element has its own `overflow`. Without setting `overflow` on `<html>`, the body is not a
   scroll container and the sticky footer falls outside the card.
 
+`npm run landing` screenshots `docs/index.html` — the GitHub Pages landing page — at desktop and
+phone widths and reports any image that failed to load. It is a look-at-it check, not an assertion:
+run it after editing the page, and actually open the two PNGs.
+
 `npm run pack` writes the store zip deterministically — entries sorted by path, all timestamps fixed,
 file modes zeroed, every entry stored rather than deflated — so the same commit produces the same
 bytes and the same hash on any machine. That hash goes in the release notes. Verify with

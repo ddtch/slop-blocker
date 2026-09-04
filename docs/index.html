@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Slop Blocker — hide AI-generated content behind a warning</title>
+    <meta
+      name="description"
+      content="A Chrome extension that hides AI-generated content behind a click-to-reveal warning. It reads the disclosures platforms already publish and the metadata generators already embed — no pixel guessing. Local only, MIT."
+    />
+    <link rel="canonical" href="https://ddtch.github.io/slop-blocker/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Slop Blocker" />
+    <meta
+      property="og:description"
+      content="Hides AI-generated content behind a warning you can click through. Every block says which signal fired and how sure it is."
+    />
+    <meta property="og:url" content="https://ddtch.github.io/slop-blocker/" />
+    <meta property="og:image" content="https://ddtch.github.io/slop-blocker/screenshots/01-blocked-page.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- The mark, drawn rather than fetched: this page makes no third-party
+         requests, which is the same promise the extension itself makes. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0b0f'/%3E%3Cpath d='M50 8C53 34 66 47 92 50C66 53 53 66 50 92C47 66 34 53 8 50C34 47 47 34 50 8Z' fill='%23ff3b30'/%3E%3C/svg%3E"
+    />
+
+    <style>
+      :root {
+        --bg: #0b0b0f;
+        --panel: #141419;
+        --panel-2: #101014;
+        --border: #26262e;
+        --text: #f4f4f5;
+        --muted: #a1a1aa;
+        --faint: #71717a;
+        --accent: #ff3b30;
+        --accent-soft: rgba(225, 29, 72, 0.14);
+        --accent-line: rgba(225, 29, 72, 0.45);
+        --ok: #34d399;
+        --warn: #f59e0b;
+        --radius: 14px;
+        --measure: 68ch;
+        color-scheme: dark;
+      }
+
+      * { box-sizing: border-box; }
+
+      html { scroll-behavior: smooth; }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        * { animation: none !important; transition: none !important; }
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a { color: inherit; }
+
+      .wrap {
+        width: 100%;
+        max-width: 1060px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      /* --- nav --- */
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(11, 11, 15, 0.86);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        height: 58px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        text-decoration: none;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .nav-links a { text-decoration: none; }
+      .nav-links a:hover { color: var(--text); }
+      @media (max-width: 620px) {
+        .nav-links .hide-sm { display: none; }
+      }
+
+      /* --- hero --- */
+
+      .hero {
+        padding: 76px 0 44px;
+        background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(225, 29, 72, 0.14), transparent 70%);
+      }
+      h1 {
+        margin: 0 0 18px;
+        font-size: clamp(34px, 6vw, 56px);
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+        max-width: 16ch;
+      }
+      .lede {
+        margin: 0 0 12px;
+        font-size: clamp(17px, 2.2vw, 20px);
+        color: var(--muted);
+        max-width: 58ch;
+      }
+      .lede strong { color: var(--text); font-weight: 600; }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 22px;
+        padding: 5px 12px 5px 10px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--warn);
+        flex: none;
+      }
+
+      .cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 30px;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 18px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid transparent;
+      }
+      .btn--primary {
+        background: var(--accent);
+        color: #fff;
+      }
+      .btn--primary:hover { background: #ff5147; }
+      .btn--ghost {
+        border-color: var(--border);
+        color: var(--text);
+      }
+      .btn--ghost:hover { background: rgba(244, 244, 245, 0.06); }
+
+      /* --- shots --- */
+
+      figure {
+        margin: 0;
+      }
+      .shot {
+        display: block;
+        width: 100%;
+        height: auto;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel-2);
+      }
+      figcaption {
+        margin-top: 12px;
+        font-size: 14px;
+        color: var(--faint);
+        max-width: var(--measure);
+      }
+
+      .hero-shot { margin-top: 44px; }
+
+      /* The popup is 360px wide; shown any smaller it stops being readable, so
+         it is pinned to its real size and centred instead of stretched. */
+      .popup-figure { display: flex; flex-direction: column; align-items: center; }
+      .shot--popup {
+        width: 360px;
+        max-width: 100%;
+        box-shadow: 0 22px 60px rgba(0, 0, 0, 0.55);
+      }
+      .popup-figure figcaption { text-align: center; }
+
+      /* --- sections --- */
+
+      section { padding: 62px 0; border-top: 1px solid var(--border); }
+      section:first-of-type { border-top: 0; }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        font-size: 12px;
+        font-weight: 650;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      h2 {
+        margin: 0 0 14px;
+        font-size: clamp(24px, 3.4vw, 32px);
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+        max-width: 20ch;
+      }
+      h3 {
+        margin: 0 0 6px;
+        font-size: 16px;
+        letter-spacing: -0.01em;
+      }
+      p { max-width: var(--measure); }
+      p, li { color: var(--muted); }
+      p strong, li strong { color: var(--text); font-weight: 600; }
+
+      /* --- signals table --- */
+
+      .table-scroll { overflow-x: auto; margin-top: 26px; }
+      table {
+        width: 100%;
+        min-width: 560px;
+        border-collapse: collapse;
+        font-size: 15px;
+      }
+      th, td {
+        text-align: left;
+        padding: 13px 14px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      th {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--faint);
+        font-weight: 600;
+      }
+      td { color: var(--muted); }
+      td:first-child { color: var(--text); white-space: nowrap; }
+
+      .tier {
+        display: inline-block;
+        padding: 2px 9px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .tier--confirmed { background: var(--accent-soft); border: 1px solid var(--accent-line); color: #fda4af; }
+      .tier--likely { background: rgba(244, 244, 245, 0.07); border: 1px solid var(--border); color: var(--muted); }
+      .tier--suspected { background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); color: #fcd34d; }
+
+      /* --- cards --- */
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 18px;
+        margin-top: 30px;
+      }
+      .card {
+        padding: 20px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+      }
+      .card p { margin: 0; font-size: 14.5px; }
+
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 34px;
+        align-items: center;
+      }
+      @media (max-width: 800px) {
+        .split { grid-template-columns: 1fr; gap: 26px; }
+      }
+
+      ul.plain { margin: 18px 0 0; padding-left: 20px; }
+      ul.plain li { margin-bottom: 9px; max-width: var(--measure); }
+
+      /* --- code --- */
+
+      pre {
+        margin: 22px 0 0;
+        padding: 16px 18px;
+        overflow-x: auto;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 13.5px;
+        line-height: 1.7;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+      }
+      p code, li code, td code {
+        font-size: 0.9em;
+        padding: 1px 5px;
+        border-radius: 5px;
+        background: rgba(244, 244, 245, 0.07);
+        color: var(--text);
+      }
+      .comment { color: var(--faint); }
+
+      /* --- honesty block --- */
+
+      .limits {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--warn);
+        border-radius: var(--radius);
+        padding: 24px 26px;
+        margin-top: 26px;
+      }
+      .limits h3 { color: var(--text); }
+      .limits ul { margin: 14px 0 0; padding-left: 20px; }
+      .limits li { margin-bottom: 10px; }
+
+      /* --- footer --- */
+
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 34px 0 54px;
+        font-size: 14px;
+        color: var(--faint);
+      }
+      .foot-inner {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px 26px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      footer a { color: var(--muted); text-decoration: none; }
+      footer a:hover { color: var(--text); }
+      .foot-links { display: flex; flex-wrap: wrap; gap: 18px; }
+    </style>
+  </head>
+
+  <body>
+    <nav class="nav">
+      <div class="wrap nav-inner">
+        <a class="brand" href="#top">
+          <svg width="22" height="22" viewBox="0 0 100 100" aria-hidden="true">
+            <rect width="100" height="100" rx="22" fill="#0b0b0f" />
+            <path
+              d="M50 8C53 34 66 47 92 50C66 53 53 66 50 92C47 66 34 53 8 50C34 47 47 34 50 8Z"
+              fill="#ff3b30"
+            />
+            <line x1="18" y1="82" x2="82" y2="18" stroke="#0b0b0f" stroke-width="9" />
+          </svg>
+          Slop Blocker
+        </a>
+        <div class="nav-links">
+          <a class="hide-sm" href="#how">How it works</a>
+          <a class="hide-sm" href="#privacy">Privacy</a>
+          <a href="#install">Install</a>
+          <a href="https://github.com/ddtch/slop-blocker">GitHub</a>
+        </div>
+      </div>
+    </nav>
+
+    <header class="hero" id="top">
+      <div class="wrap">
+        <span class="pill"><span class="dot"></span> Pre-release — not on the Chrome Web Store yet</span>
+        <h1>Hide AI slop behind a warning you can click through.</h1>
+        <p class="lede">
+          Slop Blocker covers content that is <strong>disclosed or labelled</strong> as AI-generated,
+          and tells you which signal fired and how sure it is. On YouTube it pauses a labelled video
+          before you watch it.
+        </p>
+        <p class="lede">
+          There is no neural “is this AI?” classifier here, and that is the whole design.
+        </p>
+        <div class="cta">
+          <a class="btn btn--primary" href="#install">Install from source</a>
+          <a class="btn btn--ghost" href="https://github.com/ddtch/slop-blocker">View the code</a>
+        </div>
+
+        <figure class="hero-shot">
+          <img
+            class="shot"
+            src="screenshots/01-blocked-page.png"
+            width="1280"
+            height="800"
+            alt="A page of image cards. Four are covered by a warning naming the signal that fired — Content Credentials, image metadata, text markers — one clean film photograph is untouched, and an essay about AI carries a small “possibly AI content” chip instead of being hidden."
+          />
+          <figcaption>
+            Four blocked, each with its reason. The film photograph is untouched. The essay
+            <em>about</em> AI gets a chip, not a shroud — see below.
+          </figcaption>
+        </figure>
+      </div>
+    </header>
+
+    <main>
+      <section id="how">
+        <div class="wrap">
+          <p class="eyebrow">How detection works</p>
+          <h2>It reads what the platforms already publish.</h2>
+          <p>
+            Pixel-level “AI detectors” are unreliable and heavy. So instead of guessing, this
+            aggregates signals that already exist — and the platforms did the hard part years ago.
+            TikTok reads C2PA Content Credentials on upload and labels AI content whether or not the
+            creator disclosed it. Meta does the same for files exported by Firefly, Photoshop
+            generative fill, DALL·E and Canva. YouTube requires creators to disclose realistic
+            synthetic media, and applies the label itself when they don't.
+          </p>
+
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th>Signal</th><th>Confidence</th><th>Where it comes from</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Platform disclosure</td>
+                  <td><span class="tier tier--confirmed">confirmed</span></td>
+                  <td>YouTube's “altered or synthetic content” label, TikTok's AI badge, Meta's “AI info” tag</td>
+                </tr>
+                <tr>
+                  <td>C2PA Content Credentials</td>
+                  <td><span class="tier tier--confirmed">confirmed</span></td>
+                  <td>A manifest citing <code>trainedAlgorithmicMedia</code></td>
+                </tr>
+                <tr>
+                  <td>IPTC / XMP metadata</td>
+                  <td><span class="tier tier--confirmed">confirmed</span></td>
+                  <td><code>DigitalSourceType = trainedAlgorithmicMedia</code></td>
+                </tr>
+                <tr>
+                  <td>You blocked the author</td>
+                  <td><span class="tier tier--confirmed">confirmed</span></td>
+                  <td>Your own list, built one button press at a time</td>
+                </tr>
+                <tr>
+                  <td>A known AI tool signed the file</td>
+                  <td><span class="tier tier--likely">likely</span></td>
+                  <td>A claim generator like Firefly or Midjourney, with no explicit AI action</td>
+                </tr>
+                <tr>
+                  <td>Text markers</td>
+                  <td><span class="tier tier--likely">likely</span> / <span class="tier tier--suspected">suspected</span></td>
+                  <td>Self-tagging hashtags and disclosure phrases next to the media</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid">
+            <div class="card">
+              <h3>Confirmed and likely are blocked</h3>
+              <p>
+                Suspected only gets a small “possibly AI” chip. It is a guess, and blocking guesses
+                is how a blocker loses your trust.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Signals don't stack</h3>
+              <p>
+                Two <em>suspected</em> signals stay suspected. Two weak guesses are still a guess, so
+                confidence is the highest any single signal justifies — never a sum.
+              </p>
+            </div>
+            <div class="card">
+              <h3>It fails open</h3>
+              <p>
+                Every signal provider is wrapped. A thrown error is logged and skipped: a broken
+                adapter must never break the page you are reading.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="false-positives">
+        <div class="wrap">
+          <p class="eyebrow">The hard part</p>
+          <h2>A video complaining about AI slop contains the same words as a disclosure.</h2>
+          <p>
+            This is where blockers in this category collect their one-star reviews — blocking a video
+            for saying “AI” in its captions. Two rules keep it from happening here, and both have
+            tests that fail if you break them.
+          </p>
+
+          <div class="grid">
+            <div class="card">
+              <h3>Disclosures are only read where disclosures live</h3>
+              <p>
+                Platform label text is matched <strong>only inside the disclosure containers</strong>
+                a site adapter names explicitly — never in titles, captions, descriptions or article
+                text.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Keyword tiers are asymmetric</h3>
+              <p>
+                “Generated with AI” and <code>#aiart</code> only get said when someone is labelling
+                their own work, so one hit blocks. Bare “AI-generated” is just as likely to be the
+                topic, so a single hit stays at <em>suspected</em>.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Nothing is one-way</h3>
+              <p>
+                Every block is one click from revealed, permanently. You can trust an author, switch
+                it off for a site, or turn the whole thing off from the toolbar.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="popup">
+        <div class="wrap">
+          <div class="split">
+            <div>
+              <p class="eyebrow">The popup</p>
+              <h2>Every block says what fired, and how sure it is.</h2>
+              <p>
+                No silent hiding. Each row names the signal in plain words — “Content Credentials
+                declare AI generation (Adobe Firefly)”, “AI markers in the text: #aiart” — with the
+                tier it earned, and a <em>Show</em> that undoes it permanently.
+              </p>
+              <p>
+                On a YouTube channel, a Short, a TikTok, an Instagram post or an X profile it also
+                offers <strong>Block @thatchannel</strong> and <strong>Block this video</strong>.
+                Those read the page rather than the detections, so they work on a channel there is
+                no signal about — which is the point. Both are toggles.
+              </p>
+            </div>
+            <figure class="popup-figure">
+              <img
+                class="shot shot--popup"
+                src="screenshots/04-popup-card.png"
+                width="360"
+                height="560"
+                alt="The extension popup listing five detections. Each row names the media type, a confidence tier — confirmed, likely, suspected — and the reason, such as “Content Credentials declare AI generation (Adobe Firefly)”."
+              />
+              <figcaption>Every row says what fired and how sure it is.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section id="privacy">
+        <div class="wrap">
+          <p class="eyebrow">Privacy</p>
+          <h2>No server, no account, no telemetry — and you can check.</h2>
+          <p>
+            Every extension in this category says it runs locally. In a minified bundle downloaded
+            from a store, all of those claims are worth the same: nothing. So this one is built
+            reproducibly, and each release publishes the hash of its package.
+          </p>
+
+          <pre><code><span class="comment"># build the package yourself and compare it to the release</span>
+git clone https://github.com/ddtch/slop-blocker
+cd slop-blocker
+npm ci &amp;&amp; npm run pack   <span class="comment"># prints the SHA-256 of the zip</span></code></pre>
+
+          <div class="grid">
+            <div class="card">
+              <h3>One kind of network request</h3>
+              <p>
+                It reads media the page already loaded, to look at that file's metadata — first
+                256&nbsp;KB, <code>credentials: "omit"</code>, only the host already serving you the
+                image. There is no other destination.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Nothing leaves the machine</h3>
+              <p>
+                Settings, lists and counters live in extension storage. Counters are plain numbers —
+                no URLs, no titles, no timestamps. Nothing syncs.
+              </p>
+            </div>
+            <div class="card">
+              <h3>No community list of names</h3>
+              <p>
+                The bundled creator list ships <strong>empty, on purpose</strong>. Calling a named
+                account an AI-slop channel is a factual claim about a real person. You build that
+                list yourself.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="limits">
+        <div class="wrap">
+          <p class="eyebrow">Before you install it</p>
+          <h2>What it does not do.</h2>
+          <p>
+            A blocker that oversells itself is worse than no blocker, because you stop checking. So,
+            plainly:
+          </p>
+
+          <div class="limits">
+            <h3>Honest limitations</h3>
+            <ul>
+              <li>
+                <strong>Undisclosed AI content is out of reach.</strong> If nobody labelled it and
+                the file carries no metadata, this will not find it. No extension reliably can.
+              </li>
+              <li>
+                <strong>Selectors are barely verified against live pages.</strong> Most were written
+                from public documentation. One disclosure string — TikTok's “Contains AI-generated
+                media” — has been confirmed on a real page. The rest have not.
+              </li>
+              <li>
+                <strong>Feed thumbnails aren't covered yet.</strong> A blocked video is hidden on its
+                own page, not where its card appears in a feed.
+              </li>
+              <li>
+                <strong>C2PA signatures are not verified.</strong> This detects a file's
+                <em>declaration</em> that it was AI-generated; it does not prove the declaration is
+                genuine. Good enough to hide something, not a trust anchor.
+              </li>
+              <li>
+                <strong>No accuracy percentage.</strong> You will not find “94.8% accurate” anywhere
+                here. The confidence tiers are the claim, and you can read the code that assigns them.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="install">
+        <div class="wrap">
+          <p class="eyebrow">Install</p>
+          <h2>Load it from source.</h2>
+          <p>
+            It is not in the Chrome Web Store yet — the selectors need verifying against live pages
+            first, and shipping detection that has never been confirmed to work would be exactly the
+            thing this project criticises. Until then:
+          </p>
+
+          <pre><code>git clone https://github.com/ddtch/slop-blocker
+cd slop-blocker
+npm install
+npm run build        <span class="comment"># -&gt; dist/</span></code></pre>
+
+          <p style="margin-top: 18px">
+            Then open <code>chrome://extensions</code>, turn on Developer mode, choose
+            <strong>Load unpacked</strong> and pick the <code>dist/</code> folder. Chrome 120+.
+          </p>
+
+          <div class="grid">
+            <div class="card">
+              <h3>MIT licensed</h3>
+              <p>Read it, fork it, ship it. 163 tests, and CI runs them on every push.</p>
+            </div>
+            <div class="card">
+              <h3>English, Español, Русский</h3>
+              <p>
+                Interface and platform disclosure strings. Adding a language is one file and no code.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Found a false positive?</h3>
+              <p>
+                That is the most useful thing you can report.
+                <a href="https://github.com/ddtch/slop-blocker/issues/new?template=false-positive.yml">Open an issue</a>
+                — the popup tells you the reason line to paste in.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap foot-inner">
+        <span>MIT licensed. No analytics on this page either.</span>
+        <span class="foot-links">
+          <a href="https://github.com/ddtch/slop-blocker">Source</a>
+          <a href="https://github.com/ddtch/slop-blocker/blob/main/PRIVACY.md">Privacy policy</a>
+          <a href="https://github.com/ddtch/slop-blocker/blob/main/CONTRIBUTING.md">Contributing</a>
+          <a href="https://github.com/ddtch/slop-blocker/blob/main/docs/competitive-analysis.md">Research</a>
+          <a href="https://github.com/ddtch/slop-blocker/issues">Issues</a>
+        </span>
+      </div>
+    </footer>
+  </body>
+</html>
