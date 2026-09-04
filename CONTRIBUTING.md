@@ -96,5 +96,14 @@ New behaviour needs a test. Detection changes need a test that would have failed
 
 ## Pull requests
 
+The PR template asks two things, and they are the two that save a round trip:
+what changed, and how you checked it by hand. `npm run check` passing is the
+floor — no test in this repository visits a real platform, so it says nothing
+about whether a selector works.
+
 Run `npm run check`. Explain what you verified by hand and on which page — for adapter changes, say
 which URL you loaded and what you saw. Keep the diff to one concern.
+
+## Conduct
+
+[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) — the Contributor Covenant, unmodified.
